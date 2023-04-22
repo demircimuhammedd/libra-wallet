@@ -3335,6 +3335,8 @@ name = "libra-wallet"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "aptos-config",
+ "aptos-crypto",
  "aptos-genesis",
  "aptos-keygen",
  "aptos-types",

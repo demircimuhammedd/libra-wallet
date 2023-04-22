@@ -264,9 +264,9 @@ zapatos-cli = { package = "aptos", git = "https://github.com/0o-de-lally/zapatos
 # aptos-consensus = { git = "https://github.com/aptos-labs/aptos-core/consensus" }
 # aptos-consensus-notifications = { git = "https://github.com/aptos-labs/aptos-core/state-sync/inter-component/consensus-notifications" }
 # aptos-consensus-types = { git = "https://github.com/aptos-labs/aptos-core/consensus/consensus-types" }
-# aptos-config = { git = "https://github.com/aptos-labs/aptos-core/config" }
+zapatos-config = { package = "aptos-config", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor" }
 # aptos-crash-handler = { git = "https://github.com/aptos-labs/aptos-core/crates/crash-handler" }
-# libra-crypto = { package = "aptos-crypto", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
+zapatos-crypto = { package = "aptos-crypto", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
 # aptos-crypto-derive = { git = "https://github.com/aptos-labs/aptos-core/crates/aptos-crypto-derive" }
 # aptos-data-client = { git = "https://github.com/aptos-labs/aptos-core/state-sync/aptos-data-client" }
 # aptos-data-streaming-service = { git = "https://github.com/aptos-labs/aptos-core/state-sync/state-sync-v2/data-streaming-service" }
