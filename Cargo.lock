@@ -3340,6 +3340,7 @@ dependencies = [
  "aptos-genesis",
  "aptos-keygen",
  "aptos-types",
+ "blst",
  "clap 4.2.4",
  "diem-wallet",
  "hex",

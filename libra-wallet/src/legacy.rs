@@ -14,27 +14,30 @@ use std::path::Path;
 #[derive(Serialize)]
 /// A Struct to store ALL the legacy keys for storage.
 pub struct LegacyKeys {
-  mnemonic: String,
+  pub mnemonic: String,
   /// The main account address
-  child_0_owner: AccountKeys,
+  pub child_0_owner: AccountKeys,
   /// The operator account address
-  child_1_operator: AccountKeys,
+  pub child_1_operator: AccountKeys,
   /// The validator network identity
-  child_2_val_network: AccountKeys,
+  pub child_2_val_network: AccountKeys,
   /// The fullnode network identity
-  child_3_fullnode_network: AccountKeys,
+  pub child_3_fullnode_network: AccountKeys,
   /// The consensus key
-  child_4_consensus: AccountKeys,
+  pub child_4_consensus: AccountKeys,
   /// The execution key
-  child_5_executor: AccountKeys,
+  pub child_5_executor: AccountKeys,
 }
 
 /// The AccountAddress and AuthenticationKey are zapatos structs, they have the same NAME in the diem_types crate. So we need to cast them into usuable structs.
 #[derive(Serialize)]
-struct AccountKeys {
-  account: AccountAddress,
-  auth_key: AuthenticationKey,
-  pri_key: String,
+pub struct AccountKeys {
+  /// The account address derived from AuthenticationKey
+  pub account: AccountAddress,
+  /// The authentication key derived from private key
+  pub auth_key: AuthenticationKey,
+  /// The private key hex encoded
+  pub pri_key: String,
 }
 
 /// Legacy Keygen. These note these keys are not sufficient to create a validator from V7 onwards. Besides the Mnemonic the keypair for 0th derivation (owner key) is reusable.
