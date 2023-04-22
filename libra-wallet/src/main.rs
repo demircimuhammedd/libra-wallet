@@ -2,7 +2,7 @@ pub mod legacy;
 
 use clap::{Args, Parser, Subcommand};
 use std::path::PathBuf;
-use legacy::helpers::get_keys_from_prompt;
+use legacy::get_keys_from_prompt;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -15,22 +15,22 @@ struct Entry {
 #[derive(Subcommand)]
 enum Commands {
     /// New Mnemonic
-    Seed,
+    Keygen,
     /// Use the legacy key derivation scheme
-    Bip(KeyArgs),
-    /// Use the legacy key derivation scheme
-    Legacy(KeyArgs),
+    Legacy(LegArgs),
 }
 
 #[derive(Args, Debug)]
-struct KeyArgs {
+struct LegArgs {
     ///  display private keys and authentication keys
     #[arg(short, long)]
     display: bool,
     #[arg(short, long)]
     /// save legacy keyscheme private keys to file
     output_path: Option<PathBuf>,
-
+    /// generate new keys and mnemonic in legacy format. It's not clear why you need this besides for testing. Note: these are not useful for creating a validator.
+    #[arg(short, long)]
+    keygen: bool,
 }
 
 fn main() -> anyhow::Result<()>{
@@ -44,7 +44,10 @@ fn main() -> anyhow::Result<()>{
                 println!("pass --display to show keys and/or --output-path to save keys");
                 return Ok(());
             }
-            let l = get_keys_from_prompt()?;
+
+            let l = if args.keygen { legacy::legacy_keygen()? } 
+              else { get_keys_from_prompt()? };
+
             if let Some(dir) = &args.output_path {
                 l.save_keys(dir)?;
             }
@@ -53,11 +56,10 @@ fn main() -> anyhow::Result<()>{
                 l.display();
             }
         },
-        Commands::Seed => println!("Seed"),
-        Commands::Bip(args) => {
-            println!("'wallet Bip' was used, name is: {:?}", args)
+        Commands::Keygen => {
+          // let Mnemonic(mnemonic) = Mnemonic::new();
+
         },
-        // _ => println!("No subcommand was used"),
     }
     Ok(())
 }

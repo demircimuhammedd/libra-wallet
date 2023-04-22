@@ -20,5 +20,3 @@ zapatos-types = { workspace = true }
 clap = { version = "4.2.4", features = ["derive"] }
 ol-keys = { git = "https://github.com/simsekgokhan/libra.git", branch = "v6-dwh-err"}
 diem-wallet = { git = "https://github.com/simsekgokhan/libra.git", branch = "v6-dwh-err"}
-
-

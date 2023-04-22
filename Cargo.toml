@@ -600,7 +600,7 @@ x25519-dalek = "1.2.0"
 # move-command-line-common = { git = "https://github.com/aptos-labs/aptos-core/third_party/move/move-command-line-common" }
 # move-coverage = { git = "https://github.com/aptos-labs/aptos-core/third_party/move/tools/move-coverage" }
 # move-compiler = { git = "https://github.com/aptos-labs/aptos-core/third_party/move/move-compiler" }
-move-core-types = { git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
+# move-core-types = { git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
 # move-docgen = { git = "https://github.com/aptos-labs/aptos-core/third_party/move/move-prover/move-docgen" }
 # move-disassembler = { git = "https://github.com/aptos-labs/aptos-core/third_party/move/tools/move-disassembler" }
 # move-ir-compiler = { git = "https://github.com/aptos-labs/aptos-core/third_party/move/move-ir-compiler" }
@@ -619,7 +619,7 @@ move-core-types = { git = "https://github.com/0o-de-lally/zapatos.git", branch =
 # move-unit-test = { git = "https://github.com/aptos-labs/aptos-core/third_party/move/tools/move-unit-test", features = ["table-extension"] }
 # move-vm-runtime = { git = "https://github.com/aptos-labs/aptos-core/third_party/move/move-vm/runtime" }
 # move-vm-test-utils = { git = "https://github.com/aptos-labs/aptos-core/third_party/move/move-vm/test-utils", features = ["table-extension"] }
-move-vm-types = { git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
+# move-vm-types = { git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
 # read-write-set = { git = "https://github.com/aptos-labs/aptos-core/third_party/move/tools/read-write-set" }
 # read-write-set-dynamic = { git = "https://github.com/aptos-labs/aptos-core/third_party/move/tools/read-write-set/dynamic" }
 

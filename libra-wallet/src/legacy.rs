@@ -1,7 +1,7 @@
 //! Use ol-keys to generate or parse keys using the legacy key derivation scheme
 
 use hex::encode;
-use ol_keys::wallet::get_account_from_mnem;
+use ol_keys::wallet::{keygen, get_account_from_mnem};
 use ol_keys::{scheme::KeyScheme, wallet::get_account_from_prompt};
 use anyhow::Result;
 use serde::Serialize;
@@ -9,11 +9,12 @@ use zapatos_types::transaction::authenticator::AuthenticationKey;
 use zapatos_types::account_address::AccountAddress;
 use std::str::FromStr;
 use diem_wallet::WalletLibrary;
-use std::path::PathBuf;
+use std::path::Path;
 
 #[derive(Serialize)]
 /// A Struct to store ALL the legacy keys for storage.
 pub struct LegacyKeys {
+  mnemonic: String,
   /// The main account address
   child_0_owner: AccountKeys,
   /// The operator account address
@@ -36,6 +37,12 @@ struct AccountKeys {
   pri_key: String,
 }
 
+/// Legacy Keygen. These note these keys are not sufficient to create a validator from V7 onwards. Besides the Mnemonic the keypair for 0th derivation (owner key) is reusable.
+pub fn legacy_keygen() -> Result<LegacyKeys> {
+  let (_auth_key, _account, wallet, _mnem) = keygen();
+  LegacyKeys::new(&wallet)
+}
+
 
 /// Get the legacy keys from the wallet
 pub fn get_keys_from_prompt() -> Result<LegacyKeys> {
@@ -50,7 +57,7 @@ pub fn get_keys_from_mnem(mnem: String) -> Result<LegacyKeys> {
 }
 
 fn get_account_from_private_key(w: &WalletLibrary, n: u8) -> Result<AccountKeys> {
-    let pri_keys = KeyScheme::new(&w);
+    let pri_keys = KeyScheme::new(w);
 
     let key = match n {
       0 => pri_keys.child_0_owner,
@@ -76,6 +83,7 @@ impl LegacyKeys {
   pub fn new(w: &WalletLibrary) -> Result<Self>{
     Ok(
       LegacyKeys {
+        mnemonic: w.mnemonic(),
         child_0_owner: get_account_from_private_key(w, 0)?,
         child_1_operator: get_account_from_private_key(w, 1)?,
         child_2_val_network: get_account_from_private_key(w, 2)?,
@@ -89,7 +97,7 @@ impl LegacyKeys {
   }
 
   /// Save the legacy keys to a json file
-  pub fn save_keys(&self, dir: &PathBuf) -> Result<()> {
+  pub fn save_keys(&self, dir: &Path) -> Result<()> {
     let json = serde_json::to_string_pretty(self)?;
     let path = dir.join("legacy_keys.json");
     std::fs::write(path, json)?;
