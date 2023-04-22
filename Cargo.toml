@@ -245,7 +245,7 @@ rust-version = "1.64"
 [workspace.dependencies]
 # Internal crate dependencies.
 # Please do not add any test features here: they should be declared by the individual crate.
-aptos-cli = { package = "aptos", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor" }
+# aptos-cli = { package = "aptos", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor" }
 # aptos-accumulator = { git = "https://github.com/aptos-labs/aptos-core/storage/accumulator", git = "https://github.com/aptos-labs/aptos-core/storage/accumulator" }
 # aptos-aggregator = { git = "https://github.com/aptos-labs/aptos-core/aptos-move/aptos-aggregator" }
 # libra-api = { package = "aptos-api", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
@@ -266,7 +266,7 @@ aptos-cli = { package = "aptos", git = "https://github.com/0o-de-lally/zapatos.g
 # aptos-consensus-types = { git = "https://github.com/aptos-labs/aptos-core/consensus/consensus-types" }
 # aptos-config = { git = "https://github.com/aptos-labs/aptos-core/config" }
 # aptos-crash-handler = { git = "https://github.com/aptos-labs/aptos-core/crates/crash-handler" }
-libra-crypto = { package = "aptos-crypto", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
+# libra-crypto = { package = "aptos-crypto", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
 # aptos-crypto-derive = { git = "https://github.com/aptos-labs/aptos-core/crates/aptos-crypto-derive" }
 # aptos-data-client = { git = "https://github.com/aptos-labs/aptos-core/state-sync/aptos-data-client" }
 # aptos-data-streaming-service = { git = "https://github.com/aptos-labs/aptos-core/state-sync/state-sync-v2/data-streaming-service" }
@@ -303,7 +303,7 @@ libra-crypto = { package = "aptos-crypto", git = "https://github.com/0o-de-lally
 # aptos-infallible = { git = "https://github.com/aptos-labs/aptos-core/crates/aptos-infallible" }
 # aptos-inspection-service = { git = "https://github.com/aptos-labs/aptos-core/crates/inspection-service" }
 # aptos-jellyfish-merkle = { git = "https://github.com/aptos-labs/aptos-core/storage/jellyfish-merkle" }
-aptos-keygen = { git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor" }
+# aptos-keygen = { git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor" }
 # aptos-language-e2e-tests = { git = "https://github.com/aptos-labs/aptos-core/aptos-move/e2e-tests" }
 # aptos-log-derive = { git = "https://github.com/aptos-labs/aptos-core/crates/aptos-log-derive" }
 # aptos-logger = { git = "https://github.com/aptos-labs/aptos-core/crates/aptos-logger" }
@@ -344,7 +344,7 @@ aptos-keygen = { git = "https://github.com/0o-de-lally/zapatos.git", branch ="ve
 # aptos-safety-rules = { git = "https://github.com/aptos-labs/aptos-core/consensus/safety-rules" }
 # aptos-schemadb = { git = "https://github.com/aptos-labs/aptos-core/storage/schemadb" }
 # aptos-scratchpad = { git = "https://github.com/aptos-labs/aptos-core/storage/scratchpad" }
-libra-sdk = { package = "aptos-sdk", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
+# libra-sdk = { package = "aptos-sdk", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
 # aptos-sdk-builder = { git = "https://github.com/aptos-labs/aptos-core/aptos-move/aptos-sdk-builder" }
 # aptos-secure-net = { git = "https://github.com/aptos-labs/aptos-core/secure/net" }
 # libra-secure-storage = { package = "aptos-secure-storage", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
@@ -366,7 +366,7 @@ libra-sdk = { package = "aptos-sdk", git = "https://github.com/0o-de-lally/zapat
 # aptos-transaction-emitter-lib = { git = "https://github.com/aptos-labs/aptos-core/crates/transaction-emitter-lib" }
 # aptos-transaction-generator-lib = { git = "https://github.com/aptos-labs/aptos-core/crates/transaction-generator-lib" }
 # aptos-transactional-test-harness = { git = "https://github.com/aptos-labs/aptos-core/aptos-move/aptos-transactional-test-harness" }
-# libra-types = { package = "aptos-types", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
+zapatos-types = { package = "aptos-types", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
 # aptos-validator-interface = { git = "https://github.com/aptos-labs/aptos-core/aptos-move/aptos-validator-interface" }
 # aptos-vault-client = { git = "https://github.com/aptos-labs/aptos-core/secure/storage/vault" }
 # libra-vm = { package = "aptos-vm", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
