@@ -14,7 +14,10 @@ use std::path::Path;
 #[derive(Serialize)]
 /// A Struct to store ALL the legacy keys for storage.
 pub struct LegacyKeys {
+  /// The mnemonic
   pub mnemonic: String,
+  /// seed generated from mnemonic
+  pub seed: Vec<u8>,
   /// The main account address
   pub child_0_owner: AccountKeys,
   /// The operator account address
@@ -87,6 +90,7 @@ impl LegacyKeys {
     Ok(
       LegacyKeys {
         mnemonic: w.mnemonic(),
+        seed: w.get_key_factory().main().to_owned(),
         child_0_owner: get_account_from_private_key(w, 0)?,
         child_1_operator: get_account_from_private_key(w, 1)?,
         child_2_val_network: get_account_from_private_key(w, 2)?,
@@ -122,6 +126,8 @@ fn test_legacy_keys() {
   let l = get_keys_from_mnem(alice_mnem.to_string()).unwrap();
 
   assert!(&l.child_0_owner.account.to_string() == "000000000000000000000000000000004c613c2f4b1e67ca8d98a542ee3f59f5");
+
+  assert!("2570472a9a08b9cc1f7c616e9ebb1dc534db452d3a3d3c567e58bec9f0fbd13e" == &encode(&l.seed));
 }
 
 #[test]
@@ -144,5 +150,4 @@ fn type_conversion_give_same_auth_and_address() {
 
   let auth_key_from_cfg = AuthenticationKey::ed25519(&cfg_key.public_key()).derived_address();
   assert!(auth_key_from_cfg.to_string() == l.child_0_owner.auth_key.to_string());
-  // dbg!(auth_key.to_string());
 }
