@@ -4,6 +4,9 @@
 // our key gen process, which is quite simple if you are already using BIP-44. 
 // Different from vendor, we prioritize making the mnemonic seed known to all users, and then derive all possible keys from there. Currently this applies to ed25519 keys. Vendor's keygen also includes BLS keys, which are used specifically for consensus. As such those are not relevant to end-user account holders.
 
+use crate::utils::{dir_default_to_current, create_dir_if_not_exist, check_if_file_exists, write_to_user_only_file, to_yaml};
+use crate::legacy::LegacyKeys;
+
 use ol_keys::wallet;
 use zapatos_types::transaction::authenticator::AuthenticationKey;
 use zapatos_crypto::{
@@ -20,12 +23,7 @@ use zapatos_config::{
   keys::ConfigKey,
 };
 use zapatos_crypto::traits::PrivateKey;
-// use zapatos_genesis::keys::PublicIdentity;
-// use zapatos_keygen::KeyGen;
-
-use crate::utils::*;
 use anyhow::anyhow;
-use crate::legacy::LegacyKeys;
 use std::path::PathBuf;
 
 const PRIVATE_KEYS_FILE: &str = "private-keys.yaml";
@@ -34,52 +32,59 @@ const VALIDATOR_FILE: &str = "validator-identity.yaml";
 const VFN_FILE: &str = "validator-full-node-identity.yaml";
 
 // NOTE: Devs: this is copied from zapatos_genesis::keys::generate_key_objects()  and modified to use our legacy keygen process.
-pub fn validator_keygen(output_opt: Option<PathBuf>) ->  anyhow::Result<()>{
+pub fn validator_keygen(output_opt: Option<PathBuf>) -> anyhow::Result<(IdentityBlob, IdentityBlob, PrivateIdentity, PublicIdentity)>{
+    let (_auth_key, _account, wallet, _mnem) = wallet::keygen();
+    let legacy_keys = LegacyKeys::new(&wallet)?;
+
+    let (validator_blob, vfn_blob, private_identity, public_identity) = generate_key_objects_from_legacy(legacy_keys)?;
+
+    save_files(output_opt, &validator_blob, &vfn_blob, &private_identity, &public_identity)?;
+
+    Ok((validator_blob, vfn_blob, private_identity, public_identity))
+}
 
 
+fn save_files(
+  output_opt: Option<PathBuf>,
+  validator_blob: &IdentityBlob,
+  vfn_blob: &IdentityBlob,
+  private_identity: &PrivateIdentity,
+  public_identity: &PublicIdentity
+) -> anyhow::Result<()> {
+    let output_dir = dir_default_to_current(&output_opt)?;
 
-        let output_dir = dir_default_to_current(&output_opt)?;
+    let private_keys_file = output_dir.join(PRIVATE_KEYS_FILE);
+    let public_keys_file = output_dir.join(PUBLIC_KEYS_FILE);
+    let validator_file = output_dir.join(VALIDATOR_FILE);
+    let vfn_file = output_dir.join(VFN_FILE);
+    check_if_file_exists(private_keys_file.as_path())?;
+    check_if_file_exists(public_keys_file.as_path())?;
+    check_if_file_exists(validator_file.as_path())?;
+    check_if_file_exists(vfn_file.as_path())?;
 
-        let private_keys_file = output_dir.join(PRIVATE_KEYS_FILE);
-        let public_keys_file = output_dir.join(PUBLIC_KEYS_FILE);
-        let validator_file = output_dir.join(VALIDATOR_FILE);
-        let vfn_file = output_dir.join(VFN_FILE);
-        check_if_file_exists(private_keys_file.as_path())?;
-        check_if_file_exists(public_keys_file.as_path())?;
-        check_if_file_exists(validator_file.as_path())?;
-        check_if_file_exists(vfn_file.as_path())?;
+    // Create the directory if it doesn't exist
+    create_dir_if_not_exist(output_dir.as_path())?;
 
-        let (_auth_key, _account, wallet, _mnem) = wallet::keygen();
-        let legacy_keys = LegacyKeys::new(&wallet)?;
-        
-        let (validator_blob, vfn_blob, private_identity, public_identity) = generate_key_objects_from_legacy(legacy_keys)?;
+    write_to_user_only_file(
+        private_keys_file.as_path(),
+        PRIVATE_KEYS_FILE,
+        to_yaml(&private_identity)?.as_bytes(),
+    )?;
+    write_to_user_only_file(
+        public_keys_file.as_path(),
+        PUBLIC_KEYS_FILE,
+        to_yaml(&public_identity)?.as_bytes(),
+    )?;
+    write_to_user_only_file(
+        validator_file.as_path(),
+        VALIDATOR_FILE,
+        to_yaml(&validator_blob)?.as_bytes(),
+    )?;
+    write_to_user_only_file(vfn_file.as_path(), VFN_FILE, to_yaml(&vfn_blob)?.as_bytes())?;
 
-        // Create the directory if it doesn't exist
-        create_dir_if_not_exist(output_dir.as_path())?;
+    Ok(())
 
-        write_to_user_only_file(
-            private_keys_file.as_path(),
-            PRIVATE_KEYS_FILE,
-            to_yaml(&private_identity)?.as_bytes(),
-        )?;
-        write_to_user_only_file(
-            public_keys_file.as_path(),
-            PUBLIC_KEYS_FILE,
-            to_yaml(&public_identity)?.as_bytes(),
-        )?;
-        write_to_user_only_file(
-            validator_file.as_path(),
-            VALIDATOR_FILE,
-            to_yaml(&validator_blob)?.as_bytes(),
-        )?;
-        write_to_user_only_file(vfn_file.as_path(), VFN_FILE, to_yaml(&vfn_blob)?.as_bytes())?;
-
-        Ok(())
-    }
-
-
-
-
+}
 
 /// Generates objects used for a user in genesis
 pub fn generate_key_objects_from_legacy(
