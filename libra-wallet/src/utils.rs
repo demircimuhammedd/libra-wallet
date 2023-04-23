@@ -86,7 +86,7 @@ pub fn prompt_yes_with_override(prompt: &str) -> CliTypedResult<()> {
 }
 
 // dialoguer is cleaner
-fn prompt_yes(prompt: &str) -> bool {
+pub fn prompt_yes(prompt: &str) -> bool {
     let t = format!("{} [yes/no] >", prompt);
     Confirm::new().with_prompt(t).interact().unwrap()
 }
