@@ -1,8 +1,8 @@
 pub mod legacy;
 
 use clap::{Args, Parser, Subcommand};
-use std::path::PathBuf;
 use legacy::get_keys_from_prompt;
+use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -33,7 +33,7 @@ struct LegArgs {
     keygen: bool,
 }
 
-fn main() -> anyhow::Result<()>{
+fn main() -> anyhow::Result<()> {
     let cli = Entry::parse();
 
     // You can check for the existence of subcommands, and if found use their
@@ -45,8 +45,11 @@ fn main() -> anyhow::Result<()>{
                 return Ok(());
             }
 
-            let l = if args.keygen { legacy::legacy_keygen()? } 
-              else { get_keys_from_prompt()? };
+            let l = if args.keygen {
+                legacy::legacy_keygen()?
+            } else {
+                get_keys_from_prompt()?
+            };
 
             if let Some(dir) = &args.output_path {
                 l.save_keys(dir)?;
@@ -55,11 +58,10 @@ fn main() -> anyhow::Result<()>{
             if args.display {
                 l.display();
             }
-        },
+        }
         Commands::Keygen => {
-          // let Mnemonic(mnemonic) = Mnemonic::new();
-
-        },
+            // let Mnemonic(mnemonic) = Mnemonic::new();
+        }
     }
     Ok(())
 }

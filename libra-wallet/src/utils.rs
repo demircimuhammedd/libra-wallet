@@ -2,16 +2,16 @@
 // TODO: this file is copied from vendor/crates/aptos/common/src/utils.rs
 // It's not being imported because of build issues when we try to import that module. So it's a copy paste hack for now. But should be reviewed.
 
-use std::{
-  fs::OpenOptions,
-  path::{Path, PathBuf},
-  io::Write,
-  os::unix::fs::OpenOptionsExt,
-  env::current_dir,
-};
-use dialoguer::Confirm;
 use anyhow::{anyhow, bail};
-use serde::{Serialize, de::DeserializeOwned};
+use dialoguer::Confirm;
+use serde::{de::DeserializeOwned, Serialize};
+use std::{
+    env::current_dir,
+    fs::OpenOptions,
+    io::Write,
+    os::unix::fs::OpenOptionsExt,
+    path::{Path, PathBuf},
+};
 
 /// A common result to be returned to users
 pub type CliResult = Result<String, String>;
@@ -22,12 +22,10 @@ pub type CliTypedResult<T> = Result<T, anyhow::Error>;
 /// Checks if a file exists, being overridden by `PromptOptions`
 pub fn check_if_file_exists(file: &Path) -> CliTypedResult<()> {
     if file.exists() {
-        prompt_yes_with_override(
-            &format!(
-                "{:?} already exists, are you sure you want to overwrite it?",
-                file.as_os_str(),
-            )
-        )?
+        prompt_yes_with_override(&format!(
+            "{:?} already exists, are you sure you want to overwrite it?",
+            file.as_os_str(),
+        ))?
     }
 
     Ok(())
@@ -63,8 +61,7 @@ pub fn dir_default_to_current(maybe_dir: &Option<PathBuf>) -> CliTypedResult<Pat
     if let Some(dir) = maybe_dir {
         Ok(dir.to_owned())
     } else {
-        current_dir()
-        .map_err(|e| anyhow!(e))
+        current_dir().map_err(|e| anyhow!(e))
     }
 }
 
@@ -81,7 +78,6 @@ pub fn create_dir_if_not_exist(dir: &Path) -> CliTypedResult<()> {
 
 /// Note: We removed PromptOptions because it was not used
 pub fn prompt_yes_with_override(prompt: &str) -> CliTypedResult<()> {
-
     if prompt_yes(prompt) {
         Ok(())
     } else {
