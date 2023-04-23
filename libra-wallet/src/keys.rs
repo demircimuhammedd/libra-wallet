@@ -21,96 +21,64 @@ use zapatos_config::{
 };
 use zapatos_crypto::traits::PrivateKey;
 // use zapatos_genesis::keys::PublicIdentity;
-use zapatos_keygen::KeyGen;
-// use std::{
-//   path::Path,
-//   fs::OpenOptions,
-//   os::unix::fs::OpenOptionsExt,
-//   io::Write,
-// };
+// use zapatos_keygen::KeyGen;
+
+use crate::utils::*;
 use anyhow::anyhow;
 use crate::legacy::LegacyKeys;
+use std::path::PathBuf;
 
-// const PRIVATE_KEYS_FILE: &str = "private-keys.yaml";
-// pub const PUBLIC_KEYS_FILE: &str = "public-keys.yaml";
-// const VALIDATOR_FILE: &str = "validator-identity.yaml";
-// const VFN_FILE: &str = "validator-full-node-identity.yaml";
+const PRIVATE_KEYS_FILE: &str = "private-keys.yaml";
+pub const PUBLIC_KEYS_FILE: &str = "public-keys.yaml";
+const VALIDATOR_FILE: &str = "validator-identity.yaml";
+const VFN_FILE: &str = "validator-full-node-identity.yaml";
 
 // NOTE: Devs: this is copied from zapatos_genesis::keys::generate_key_objects()  and modified to use our legacy keygen process.
-pub fn validator_keygen() ->  anyhow::Result<()>{
+pub fn validator_keygen(output_opt: Option<PathBuf>) ->  anyhow::Result<()>{
+
+
+
+        let output_dir = dir_default_to_current(&output_opt)?;
+
+        let private_keys_file = output_dir.join(PRIVATE_KEYS_FILE);
+        let public_keys_file = output_dir.join(PUBLIC_KEYS_FILE);
+        let validator_file = output_dir.join(VALIDATOR_FILE);
+        let vfn_file = output_dir.join(VFN_FILE);
+        check_if_file_exists(private_keys_file.as_path())?;
+        check_if_file_exists(public_keys_file.as_path())?;
+        check_if_file_exists(validator_file.as_path())?;
+        check_if_file_exists(vfn_file.as_path())?;
+
         let (_auth_key, _account, wallet, _mnem) = wallet::keygen();
         let legacy_keys = LegacyKeys::new(&wallet)?;
-        generate_key_objects_from_legacy(legacy_keys)?;
-        // // let output_dir = dir_default_to_current(self.output_dir.clone())?;
+        
+        let (validator_blob, vfn_blob, private_identity, public_identity) = generate_key_objects_from_legacy(legacy_keys)?;
 
-        // let private_keys_file = output_dir.join(PRIVATE_KEYS_FILE);
-        // let public_keys_file = output_dir.join(PUBLIC_KEYS_FILE);
-        // let validator_file = output_dir.join(VALIDATOR_FILE);
-        // let vfn_file = output_dir.join(VFN_FILE);
-        // // check_if_file_exists(private_keys_file.as_path(), self.prompt_options)?;
-        // // check_if_file_exists(public_keys_file.as_path(), self.prompt_options)?;
-        // // check_if_file_exists(validator_file.as_path(), self.prompt_options)?;
-        // // check_if_file_exists(vfn_file.as_path(), self.prompt_options)?;
+        // Create the directory if it doesn't exist
+        create_dir_if_not_exist(output_dir.as_path())?;
 
-        // let mut key_generator = KeyGen::from_os_rng();
-        // let (validator_blob, mut _vfn_blob, _private_identity, _public_identity) =
-        //     generate_key_objects(&mut key_generator)?;
-
-        // dbg!(&validator_blob.account_address);
-        // // Allow for the owner to be different than the operator
-        // if let Some(pool_address) = self.pool_address_args.pool_address {
-        //     validator_blob.account_address = Some(pool_address);
-        //     vfn_blob.account_address = Some(pool_address);
-        // }
-
-        // // Create the directory if it doesn't exist
-        // create_dir_if_not_exist(output_dir.as_path())?;
-
-        // write_to_user_only_file(
-        //     private_keys_file.as_path(),
-        //     PRIVATE_KEYS_FILE,
-        //     to_yaml(&private_identity)?.as_bytes(),
-        // )?;
-        // write_to_user_only_file(
-        //     public_keys_file.as_path(),
-        //     PUBLIC_KEYS_FILE,
-        //     to_yaml(&public_identity)?.as_bytes(),
-        // )?;
-        // write_to_user_only_file(
-        //     validator_file.as_path(),
-        //     VALIDATOR_FILE,
-        //     to_yaml(&validator_blob)?.as_bytes(),
-        // )?;
-        // write_to_user_only_file(vfn_file.as_path(), VFN_FILE, to_yaml(&vfn_blob)?.as_bytes())?;
+        write_to_user_only_file(
+            private_keys_file.as_path(),
+            PRIVATE_KEYS_FILE,
+            to_yaml(&private_identity)?.as_bytes(),
+        )?;
+        write_to_user_only_file(
+            public_keys_file.as_path(),
+            PUBLIC_KEYS_FILE,
+            to_yaml(&public_identity)?.as_bytes(),
+        )?;
+        write_to_user_only_file(
+            validator_file.as_path(),
+            VALIDATOR_FILE,
+            to_yaml(&validator_blob)?.as_bytes(),
+        )?;
+        write_to_user_only_file(vfn_file.as_path(), VFN_FILE, to_yaml(&vfn_blob)?.as_bytes())?;
 
         Ok(())
     }
 
 
-// /// Write a User only read / write file
-// pub fn write_to_user_only_file(path: &Path, name: &str, bytes: &[u8]) -> anyhow::Result<()> {
-//     let mut opts = OpenOptions::new();
-//     #[cfg(unix)]
-//     opts.mode(0o600);
-//     write_to_file_with_opts(path, name, bytes, &mut opts)
-// }
 
-// /// Write a `&[u8]` to a file with the given options
-// pub fn write_to_file_with_opts(
-//     path: &Path,
-//     name: &str,
-//     bytes: &[u8],
-//     opts: &mut OpenOptions,
-// ) -> anyhow::Result<()> {
-//     let mut file = opts
-//         .write(true)
-//         .create(true)
-//         .truncate(true)
-//         .open(path)?;
-//         // .map_err(|e| CliError::IO(name.to_string(), e))?;
-//     Ok(file.write_all(bytes)?)
-//         // .map_err(|e| CliError::IO(name.to_string(), e))
-// }
 
 
 /// Generates objects used for a user in genesis

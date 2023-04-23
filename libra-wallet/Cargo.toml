@@ -12,6 +12,12 @@ rust-version = { workspace = true }
 
 [dependencies]
 
+# Different than workspace
+dialoguer = "0.10.4"
+clap = { version = "4.2.4", features = ["derive"] }
+
+# Same as vendor workspace
+serde_yaml = { workspace = true }
 hex = { workspace = true }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
@@ -22,6 +28,5 @@ zapatos-crypto = { workspace = true }
 zapatos-keygen = { workspace = true }
 zapatos-genesis = { workspace = true }
 zapatos-config = { workspace = true }
-clap = { version = "4.2.4", features = ["derive"] }
 ol-keys = { git = "https://github.com/simsekgokhan/libra.git", branch = "v6-dwh-err"}
 diem-wallet = { git = "https://github.com/simsekgokhan/libra.git", branch = "v6-dwh-err"}
