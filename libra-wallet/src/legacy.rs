@@ -123,3 +123,26 @@ fn test_legacy_keys() {
 
   assert!(&l.child_0_owner.account.to_string() == "000000000000000000000000000000004c613c2f4b1e67ca8d98a542ee3f59f5");
 }
+
+#[test]
+// We want to check that the address and auth key derivation is the same from what Diem generates, and what the vendor types do.
+fn type_conversion_give_same_auth_and_address() {
+  let alice_mnem = "talent sunset lizard pill fame nuclear spy noodle basket okay critic grow sleep legend hurry pitch blanket clerk impose rough degree sock insane purse";
+
+  let (auth_key, account, wallet) = get_account_from_mnem(alice_mnem.to_owned()).unwrap();
+
+  let l = LegacyKeys::new(&wallet).unwrap();
+
+  assert!(account.to_hex_literal() == l.child_0_owner.account.to_hex_literal());
+  assert!(auth_key.to_string() == l.child_0_owner.auth_key.to_string());
+
+  // Check the vendor ConfigKey struct is the same.
+  use zapatos_config::keys::ConfigKey;
+  use zapatos_crypto::ed25519::Ed25519PrivateKey;
+
+  let cfg_key: ConfigKey<Ed25519PrivateKey> = ConfigKey::from_encoded_string(&l.child_0_owner.pri_key).unwrap();
+
+  let auth_key_from_cfg = AuthenticationKey::ed25519(&cfg_key.public_key()).derived_address();
+  assert!(auth_key_from_cfg.to_string() == l.child_0_owner.auth_key.to_string());
+  // dbg!(auth_key.to_string());
+}

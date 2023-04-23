@@ -173,12 +173,12 @@ pub fn generate_key_objects_from_legacy(
 
     // consensus key needs to be generated anew as it is not part of the legacy keys
     // let keygen = KeyGen::from_os_rng();
-    let consensus_key = ConfigKey::new(bls_generate_key(seed)?);
+    let _consensus_key = ConfigKey::new(bls_generate_key(seed)?);
 
     // let validator_network_key = ConfigKey::new(keygen.generate_x25519_private_key()?);
     // let full_node_network_key = ConfigKey::new(keygen.generate_x25519_private_key()?);
 
-    let account_address = AuthenticationKey::ed25519(&account_key.public_key()).derived_address();
+    let _account_address = AuthenticationKey::ed25519(&account_key.public_key()).derived_address();
 
 
     // // Build these for use later as node identity
@@ -230,7 +230,7 @@ fn bls_generate_key(ikm: &[u8]) -> anyhow::Result<bls12381::PrivateKey> {
 }
 
 #[test]
-fn compare_keygen() {
+fn private_key_auth_derivation() {
   let alice_mnem = "talent sunset lizard pill fame nuclear spy noodle basket okay critic grow sleep legend hurry pitch blanket clerk impose rough degree sock insane purse";
 
   let l = crate::legacy::get_keys_from_mnem(alice_mnem.to_string()).unwrap();
@@ -239,7 +239,7 @@ fn compare_keygen() {
 
   let account_key: ConfigKey<Ed25519PrivateKey> = ConfigKey::from_encoded_string(&l.child_0_owner.pri_key).unwrap();
 
-  let account_address = AuthenticationKey::ed25519(&account_key.public_key()).derived_address();
+  let auth_key = AuthenticationKey::ed25519(&account_key.public_key()).derived_address();
 
-  dbg!(&account_address);
+  dbg!(&auth_key);
 }
