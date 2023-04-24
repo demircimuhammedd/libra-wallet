@@ -48,6 +48,13 @@ impl Default for SetValidatorConfiguration {
 }
 
 impl SetValidatorConfiguration {
+    pub fn new(username: String, host: HostAndPort) -> Self {
+        let mut cfg = Self::default();
+        cfg.username = username;
+        cfg.validator_host = host;
+        cfg
+    }
+
     pub fn set_config_files(self) -> Result<(OperatorConfiguration, OwnerConfiguration)> {
         // Load owner
         let owner_keys_file = if let Some(owner_keys_file) = self.owner_public_identity_file {
