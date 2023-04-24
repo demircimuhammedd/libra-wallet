@@ -12,6 +12,7 @@ use std::{
     os::unix::fs::OpenOptionsExt,
     path::{Path, PathBuf},
 };
+use zapatos_genesis::keys::PublicIdentity;
 
 /// A common result to be returned to users
 pub type CliResult = Result<String, String>;
@@ -97,4 +98,13 @@ pub fn to_yaml<T: Serialize + ?Sized>(input: &T) -> CliTypedResult<String> {
 
 pub fn from_yaml<T: DeserializeOwned>(input: &str) -> CliTypedResult<T> {
     Ok(serde_yaml::from_str(input)?)
+}
+
+pub fn read_from_file(path: &Path) -> CliTypedResult<Vec<u8>> {
+    std::fs::read(path).map_err(|e| anyhow!(e.to_string()))
+}
+
+pub fn read_public_identity_file(public_identity_file: &Path) -> CliTypedResult<PublicIdentity> {
+    let bytes = read_from_file(public_identity_file)?;
+    from_yaml(&String::from_utf8(bytes).map_err(|e| anyhow!(e))?)
 }

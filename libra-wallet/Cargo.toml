@@ -17,6 +17,7 @@ dialoguer = "0.10.4"
 clap = { version = "4.2.4", features = ["derive"] }
 
 # Same as vendor workspace
+dirs = { workspace = true }
 serde_yaml = { workspace = true }
 hex = { workspace = true }
 serde_json = { workspace = true }

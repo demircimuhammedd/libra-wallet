@@ -21,7 +21,7 @@ use zapatos_types::transaction::authenticator::AuthenticationKey;
 
 // These are consistent with Vendor
 const PRIVATE_KEYS_FILE: &str = "private-keys.yaml";
-const PUBLIC_KEYS_FILE: &str = "public-keys.yaml";
+pub const PUBLIC_KEYS_FILE: &str = "public-keys.yaml";
 const VALIDATOR_FILE: &str = "validator-identity.yaml";
 const VFN_FILE: &str = "validator-full-node-identity.yaml";
 // This is 0L specific
@@ -33,8 +33,7 @@ pub fn user_keygen(output_opt: Option<PathBuf>) -> anyhow::Result<()> {
 
     if let Some(dir) = output_opt {
         if prompt_yes(
-            format!("Saving keys locally is VERY DANGEROUS, do you know what you are doing?")
-                .as_str(),
+            "Saving keys locally is VERY DANGEROUS, do you know what you are doing?",
         ) {
             write_key_file(&dir, USER_FILE, user_keys)?;
         }

@@ -4,3 +4,4 @@
 pub mod keys;
 pub mod legacy;
 pub mod utils;
+pub mod validator_files;
