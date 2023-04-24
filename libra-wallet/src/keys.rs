@@ -32,9 +32,7 @@ pub fn user_keygen(output_opt: Option<PathBuf>) -> anyhow::Result<()> {
     let user_keys = legacy_keygen()?;
 
     if let Some(dir) = output_opt {
-        if prompt_yes(
-            "Saving keys locally is VERY DANGEROUS, do you know what you are doing?",
-        ) {
+        if prompt_yes("Saving keys locally is VERY DANGEROUS, do you know what you are doing?") {
             write_key_file(&dir, USER_FILE, user_keys)?;
         }
     }

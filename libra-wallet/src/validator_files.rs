@@ -1,9 +1,14 @@
 use std::{env::current_dir, path::PathBuf};
 
-use anyhow::bail;
+use anyhow::{bail, Result};
 use zapatos_genesis::config::{HostAndPort, OperatorConfiguration, OwnerConfiguration};
 
-use crate::{keys::PUBLIC_KEYS_FILE, utils::read_public_identity_file};
+use crate::{
+    keys::PUBLIC_KEYS_FILE,
+    utils::{
+        from_yaml, read_from_file, read_public_identity_file, to_yaml, write_to_user_only_file,
+    },
+};
 
 pub const DEFAULT_VALIDATOR_DIR: &str = ".libra";
 pub const OPERATOR_FILE: &str = "operator.yaml";
@@ -43,7 +48,7 @@ impl Default for SetValidatorConfiguration {
 }
 
 impl SetValidatorConfiguration {
-    pub fn set_config_files(self) -> anyhow::Result<()> {
+    pub fn set_config_files(self) -> Result<(OperatorConfiguration, OwnerConfiguration)> {
         // Load owner
         let owner_keys_file = if let Some(owner_keys_file) = self.owner_public_identity_file {
             owner_keys_file
@@ -116,7 +121,7 @@ impl SetValidatorConfiguration {
         };
 
         // Build operator configuration file
-        let _operator_config = OperatorConfiguration {
+        let operator_config = OperatorConfiguration {
             operator_account_address: operator_identity.account_address.into(),
             operator_account_public_key: operator_identity.account_public_key.clone(),
             consensus_public_key,
@@ -127,7 +132,7 @@ impl SetValidatorConfiguration {
             full_node_host: self.full_node_host,
         };
 
-        let _owner_config = OwnerConfiguration {
+        let owner_config = OwnerConfiguration {
             owner_account_address: owner_identity.account_address.into(),
             owner_account_public_key: owner_identity.account_public_key,
             voter_account_address: voter_identity.account_address.into(),
@@ -139,13 +144,41 @@ impl SetValidatorConfiguration {
             join_during_genesis: true,
         };
 
-        let directory = PathBuf::from(&self.username);
-        let _operator_file = directory.join(OPERATOR_FILE);
-        let _owner_file = directory.join(OWNER_FILE);
+        write_to_user_only_file(
+            &dirs::home_dir()
+                .unwrap()
+                .join(DEFAULT_VALIDATOR_DIR)
+                .join(OPERATOR_FILE),
+            OPERATOR_FILE,
+            to_yaml(&operator_config)?.as_bytes(),
+        )?;
 
-        // let git_client = self.git_options.get_client()?;
-        // git_client.put(operator_file.as_path(), &operator_config)?;
-        // git_client.put(owner_file.as_path(), &owner_config)
-        Ok(())
+        write_to_user_only_file(
+            &dirs::home_dir()
+                .unwrap()
+                .join(DEFAULT_VALIDATOR_DIR)
+                .join(OWNER_FILE),
+            OWNER_FILE,
+            to_yaml(&owner_config)?.as_bytes(),
+        )?;
+
+        Ok((operator_config, owner_config))
+    }
+
+    pub fn read_configs_from_file(
+        home_path: Option<PathBuf>,
+    ) -> Result<(OperatorConfiguration, OwnerConfiguration)> {
+        let dir = home_path.unwrap_or_else(|| dirs::home_dir().unwrap().join(DEFAULT_VALIDATOR_DIR));
+
+        let operator_config: OperatorConfiguration = from_yaml(
+            &String::from_utf8(read_from_file(&dir.join(OPERATOR_FILE)).unwrap()).unwrap(),
+        )
+        .unwrap();
+
+        let owner_config: OwnerConfiguration =
+            from_yaml(&String::from_utf8(read_from_file(&dir.join(OWNER_FILE)).unwrap()).unwrap())
+                .unwrap();
+
+        Ok((operator_config, owner_config))
     }
 }
