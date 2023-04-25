@@ -2,7 +2,7 @@
 //! instead of using many CLI tools.
 //! genesis wizard
 
-use crate::node_yaml;
+use crate::{node_yaml, genesis_builder};
 ///////
 // TODO: import from libra
 use crate::{hack_cli_progress::OLProgress, genesis_registration};
@@ -118,46 +118,14 @@ impl GenesisWizard {
             .unwrap();
 
         if ready {
-            // assumes this environment is set up properly
-            // let app_config = ol_types::config::parse_toml(self.data_path.join("0L.toml"))?;
-            // run genesis
+            genesis_builder::build(
+                self.genesis_repo_org.clone(),
+                self.repo_name.clone(),
+                self.github_token.clone(),
+                self.data_path.clone(),
+            )?;
+            OLProgress::complete("Genesis files built");
 
-            // let snapshot_path = if Confirm::new()
-            //     .with_prompt("Do we need to download a new legacy snapshot?")
-            //     .interact()? {
-            //     self.download_snapshot(&app_config)?
-            // } else {
-            //     let input = Input::<String>::new()
-            //         .with_prompt("Enter the (absolute) path to the snapshot state.manifest file")
-            //         .interact_text()?;
-            //     PathBuf::from(input)
-            // };
-            // println!("snapshot path: {:?}", snapshot_path);
-
-            // // do the whole genesis workflow and create the files
-            // run::default_run(
-            //     self.data_path.clone(),
-            //     snapshot_path,
-            //     self.genesis_repo_org.clone(),
-            //     self.repo_name.clone(),
-            //     self.github_token.clone(),
-            //     false,
-            // )?;
-
-            // make node files
-            self.make_node_files()?;
-
-
-            // check db
-            // self.maybe_backup_db();
-
-            // remove "owner" key from key_store.json
-            // TODO: V7 do we need to do this?
-            // self.maybe_remove_money_keys(&app_config);
-
-            // verify genesis
-            // TODO: v7
-            // self.check_keys_and_genesis(&app_config)?;
 
             for _ in (0..10)
                 .progress_with_style(OLProgress::fun())
@@ -365,11 +333,6 @@ fn _download_snapshot(&mut self, _app_cfg: &AppCfg) -> anyhow::Result<PathBuf> {
                 ).expect("failed to move db to db_bak");
             }
         }
-    }
-
-    fn make_node_files(&self) -> anyhow::Result<()> {
-        // TODO: Get node yaml file template.
-        Ok(())
     }
 
 }

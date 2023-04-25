@@ -22,7 +22,6 @@ const WAYPOINT_FILE: &str = "waypoint.txt";
 const GENESIS_FILE: &str = "genesis.blob";
 
 pub fn build(
-  genesis_username: String,
   github_owner: String,
   github_repository: String,
   github_token: String,
@@ -74,9 +73,6 @@ pub fn fetch_genesis_info(
     let l_file = client.get_file(&Path::new(LAYOUT_FILE).display().to_string())?;
     let layout: Layout = from_yaml(&String::from_utf8(base64::decode(l_file)?)?)?;
 
-    dbg!(&layout);
-
-
     // if layout.root_key.is_none() {
     //     return Err(CliError::UnexpectedError(
     //         "Layout field root_key was not set.  Please provide a hex encoded Ed25519PublicKey."
@@ -86,16 +82,12 @@ pub fn fetch_genesis_info(
 
     let validators = get_validator_configs(&client, &layout, false)?;
 
-    dbg!(&validators);
-
     // let framework = client.get_file(&path.display())ring())?);
     let bytes = base64::decode(client.get_file(FRAMEWORK_NAME)?)?;
     let framework = bcs::from_bytes::<ReleaseBundle>(&bytes)?;
 
-    // dbg!(&framework.packages);
     // let framework = client.get_framework()?;
     let dummy_root = Ed25519PublicKey::from_encoded_string("0x0000000000000000000000000000000000000000000000000000000000000000").expect("could not parse dummy root");
-    dbg!(&dummy_root);
 
     Ok(GenesisInfo::new(
         layout.chain_id,
@@ -151,7 +143,7 @@ fn get_validator_configs(
 fn get_config(
     client: &Client,
     user: &str,
-    is_mainnet: bool,
+    _is_mainnet: bool,
 ) -> Result<ValidatorConfiguration> {
     // Load a user's configuration files
     let dir = PathBuf::from(user);
@@ -161,7 +153,6 @@ fn get_config(
     let file = client.get_file(&Path::new(owner_file).display().to_string())?;
     let owner_config: StringOwnerConfiguration = from_yaml(&String::from_utf8(base64::decode(file)?)?)?;
 
-    dbg!(&owner_config);
     // Check and convert fields in owner file
     let owner_account_address: AccountAddress = parse_required_option(
         &owner_config.owner_account_address,
@@ -257,7 +248,6 @@ fn get_config(
     let file = client.get_file(&Path::new(operator_file).display().to_string())?;
     let operator_config: StringOperatorConfiguration  = from_yaml(&String::from_utf8(base64::decode(file)?)?)?;
     
-    dbg!(&operator_config);
     // let operator_config = client.get::<StringOperatorConfiguration>(operator_file)?;
 
     // Check and convert fields in operator file
@@ -428,7 +418,7 @@ fn test_build() {
   let gh_token_path = dirs::home_dir().unwrap().join(".libra").join("github_token.txt");
   let token = std::fs::read_to_string(&gh_token_path).unwrap();
 
-  let genesis_info = fetch_genesis_info(
+  let _genesis_info = fetch_genesis_info(
     "0o-de-lally".to_string(),
     "a-genesis".to_string(),
     token,
