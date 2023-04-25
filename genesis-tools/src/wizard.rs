@@ -19,8 +19,9 @@ use libra_wallet::validator_files::SetValidatorConfiguration;
 use zapatos_genesis::config::HostAndPort;
 use zapatos_github_client::Client;
 
-const DEFAULT_DATA_PATH: &str = ".libra";
+pub const DEFAULT_DATA_PATH: &str = ".libra";
 const DEFAULT_GIT_BRANCH: &str = "main";
+const GITHUB_TOKEN_FILENAME: &str = "github_token.txt";
 /// Wizard for genesis
 pub struct GenesisWizard {
     /// a name to use only for genesis purposes
@@ -163,10 +164,10 @@ impl GenesisWizard {
     }
 
     fn git_token_check(&mut self) -> anyhow::Result<()> {
-        let gh_token_path = self.data_path.join("github_token.txt");
+        let gh_token_path = self.data_path.join(GITHUB_TOKEN_FILENAME);
         if !Path::exists(&gh_token_path) {
             match Input::<String>::new()
-                .with_prompt("No github token found, enter one now, or save to github_token.txt")
+                .with_prompt(&format!("No github token found, enter one now, or save to {}", GITHUB_TOKEN_FILENAME))
                 .interact_text()
             {
                 Ok(s) => {
@@ -315,7 +316,7 @@ fn _download_snapshot(&mut self, _app_cfg: &AppCfg) -> anyhow::Result<PathBuf> {
     }
 
     fn make_pull_request(&self) -> anyhow::Result<()> {
-        let gh_token_path = self.data_path.join("github_token.txt");
+        let gh_token_path = self.data_path.join(GITHUB_TOKEN_FILENAME);
         let api_token = std::fs::read_to_string(&gh_token_path)?;
 
         let pb = ProgressBar::new(1).with_style(OLProgress::bar());

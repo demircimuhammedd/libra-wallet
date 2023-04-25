@@ -48,4 +48,5 @@ indicatif = "0.17.3"
 
 [dev-dependencies]
 zapatos-sdk = { workspace = true }
+zapatos-config = { workspace = true }
 

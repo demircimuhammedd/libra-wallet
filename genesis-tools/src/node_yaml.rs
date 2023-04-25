@@ -1,0 +1,99 @@
+//! saves a validator yaml file with the minimal configurations.
+
+use crate::wizard::DEFAULT_DATA_PATH;
+use std::path::PathBuf;
+use anyhow::Result;
+use libra_wallet::utils::{write_to_user_only_file, from_yaml};
+
+
+
+pub const NODE_YAML_FILE: &str = "validator.yaml";
+
+fn save_validator_yaml(home_dir: Option<PathBuf>) -> Result<PathBuf> {
+  let home_dir = home_dir.unwrap_or_else(|| {
+    dirs::home_dir().expect("Unable to determine home directory")
+    .join(DEFAULT_DATA_PATH)
+  });
+  let path = home_dir.display().to_string();
+
+  let template = format!(
+"
+base:
+  role: 'validator'
+  data_dir: '{path}/data'
+  waypoint:
+    from_file: '{path}/genesis/waypoint.txt'
+
+consensus:
+  safety_rules:
+    service:
+      type: 'local'
+    backend:
+      type: 'on_disk_storage'
+      path: secure-data.json
+      namespace: ~
+    initial_safety_rules_config:
+      from_file:
+        waypoint:
+          from_file: {path}/genesis/waypoint.txt
+        identity_blob_path: {path}/genesis/validator-identity.yaml
+
+execution:
+  genesis_file_location: '{path}/genesis/genesis.blob'
+
+validator_network:
+  discovery_method: 'onchain'
+  mutual_authentication: true
+  identity:
+    type: 'from_file'
+    path: {path}/genesis/validator-identity.yaml
+
+full_node_networks:
+- network_id:
+    private: 'vfn'
+  listen_address: '/ip4/0.0.0.0/tcp/6181'
+  identity:
+    type: 'from_config'
+    key: 'b0f405a3e75516763c43a2ae1d70423699f34cd68fa9f8c6bb2d67aa87d0af69'
+    peer_id: '00000000000000000000000000000000d58bc7bb154b38039bc9096ce04e1237'
+
+api:
+  enabled: true
+  address: '0.0.0.0:8080'
+");
+
+    let output_file = home_dir
+          .join(NODE_YAML_FILE);
+    write_to_user_only_file(
+      &output_file,
+      NODE_YAML_FILE,
+      &template.as_bytes(),
+    )?;
+
+    Ok(output_file)
+
+}
+
+#[test] 
+fn test_yaml() {
+  use zapatos_config::config::NodeConfig;
+
+  let path = dirs::home_dir().expect("Unable to determine home directory")
+    .join(DEFAULT_DATA_PATH)
+    .join("test_yaml");
+
+  std::fs::create_dir_all(&path).unwrap();
+
+  let file = save_validator_yaml(Some(path.clone())).unwrap();
+
+
+  let read = std::fs::read_to_string(&file).unwrap();
+  let y: NodeConfig = from_yaml(&read).unwrap();
+
+  assert!(y.base.role.is_validator());
+
+  assert!(y.base.data_dir.display().to_string() == format!("{}/data", path.display().to_string()));
+  // remove the file and directory
+  // std::fs::remove_file(path.join(NODE_YAML_FILE)).unwrap();
+  std::fs::remove_dir_all(path).unwrap();
+}
