@@ -39,6 +39,7 @@ zapatos-cached-packages = { workspace = true }
 zapatos-github-client = { workspace = true }
 zapatos-types = { workspace = true }
 zapatos-vm-genesis = { workspace = true }
+zapatos-config = { workspace = true }
 
 
 # for the hack_ files
@@ -48,5 +49,4 @@ indicatif = "0.17.3"
 
 [dev-dependencies]
 zapatos-sdk = { workspace = true }
-zapatos-config = { workspace = true }
 

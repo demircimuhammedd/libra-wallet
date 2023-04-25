@@ -7,3 +7,4 @@ pub mod hack_cli_progress;
 pub mod github_extensions;
 pub mod genesis_registration;
 pub mod node_yaml;
+pub mod genesis_builder;

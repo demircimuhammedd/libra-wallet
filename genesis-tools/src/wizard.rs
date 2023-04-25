@@ -26,7 +26,7 @@ use zapatos_github_client::Client;
 use zapatos_config::config::IdentityBlob;
 
 pub const DEFAULT_DATA_PATH: &str = ".libra";
-const DEFAULT_GIT_BRANCH: &str = "main";
+pub const DEFAULT_GIT_BRANCH: &str = "main";
 const GITHUB_TOKEN_FILENAME: &str = "github_token.txt";
 /// Wizard for genesis
 pub struct GenesisWizard {
