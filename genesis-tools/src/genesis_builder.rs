@@ -29,8 +29,8 @@ pub fn build(
 ) -> Result<Vec<PathBuf>> {
         let output_dir = home_path; // TODO
 
-        let genesis_file = output_dir.join(GENESIS_FILE);
-        let waypoint_file = output_dir.join(WAYPOINT_FILE);
+        let genesis_file = output_dir.join("genesis").join(GENESIS_FILE);
+        let waypoint_file = output_dir.join("genesis").join(WAYPOINT_FILE);
         check_if_file_exists(genesis_file.as_path())?;
         check_if_file_exists(waypoint_file.as_path())?;
 
