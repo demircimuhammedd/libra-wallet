@@ -26,7 +26,7 @@ pub struct SetValidatorConfiguration {
     pub full_node_host: Option<HostAndPort>,
 
     /// Path to private identity generated from GenerateKeys
-    pub owner_public_identity_file: Option<PathBuf>,
+    pub home_dir: Option<PathBuf>,
 }
 
 impl Default for SetValidatorConfiguration {
@@ -54,26 +54,26 @@ impl SetValidatorConfiguration {
       validator_host: HostAndPort,
       full_node_host: Option<HostAndPort>,
     ) -> Self {
-        
-        let mut file = home_dir.unwrap_or_else(|| dirs::home_dir().unwrap());
-        file
-            .join(DEFAULT_VALIDATOR_DIR)
-            .join(PUBLIC_KEYS_FILE);
-
         Self {
             username,
             validator_host,
             full_node_host,
-            owner_public_identity_file: Some(file),           
+            home_dir,
+        }
     }
 
     pub fn set_config_files(self) -> Result<(OperatorConfiguration, OwnerConfiguration)> {
+        let owner_keys_file = self.home_dir
+          .unwrap_or_else(|| dirs::home_dir().unwrap());
+          .join(DEFAULT_VALIDATOR_DIR)
+          .join(PUBLIC_KEYS_FILE);
+
         // Load owner
-        let owner_keys_file = if let Some(owner_keys_file) = self.owner_public_identity_file {
-            owner_keys_file
-        } else {
-            current_dir()?.join(PUBLIC_KEYS_FILE)
-        };
+        // let owner_keys_file = if let Some(owner_keys_file) = self.owner_public_identity_file {
+        //     owner_keys_file
+        // } else {
+        //     current_dir()?.join(PUBLIC_KEYS_FILE)
+        // };
         let owner_identity = read_public_identity_file(owner_keys_file.as_path())?;
 
         // // Load voter
