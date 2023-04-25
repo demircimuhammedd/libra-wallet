@@ -16,9 +16,14 @@ use anyhow::bail;
 use dialoguer::{Confirm, Input};
 
 use ol_types::config::AppCfg;
-use libra_wallet::validator_files::SetValidatorConfiguration;
+use libra_wallet::{
+  validator_files::SetValidatorConfiguration,
+  keys::VALIDATOR_FILE
+};
+
 use zapatos_genesis::config::HostAndPort;
 use zapatos_github_client::Client;
+use zapatos_config::config::IdentityBlob;
 
 pub const DEFAULT_DATA_PATH: &str = ".libra";
 const DEFAULT_GIT_BRANCH: &str = "main";
@@ -26,7 +31,7 @@ const GITHUB_TOKEN_FILENAME: &str = "github_token.txt";
 /// Wizard for genesis
 pub struct GenesisWizard {
     /// a name to use only for genesis purposes
-    pub namespace: String,
+    pub username: String,
     /// the github org hosting the genesis repo
     pub genesis_repo_org: String,
     /// name of the repo
@@ -47,7 +52,7 @@ impl Default for GenesisWizard {
         let data_path = dirs::home_dir().expect("no home dir found").join(DEFAULT_DATA_PATH);
 
         Self {
-            namespace: "alice".to_string(),
+            username: "alice".to_string(),
             genesis_repo_org: "0o-de-lally".to_string(),
             // genesis_repo_org: "alice".to_string(),
             repo_name: "a-genesis".to_string(),
@@ -77,7 +82,7 @@ impl GenesisWizard {
             if !has_data_path {
                 println!("Let's initialize this host");
                 let temp: HostAndPort = HostAndPort::local(6180)?;
-                initialize_host(Some(self.data_path.clone()), &self.namespace, temp)?;
+                initialize_host(Some(self.data_path.clone()), &self.github_username, temp)?;
             } else {
                 // check if the user wants to overwrite configs
                 if Confirm::new()
@@ -85,10 +90,13 @@ impl GenesisWizard {
                     .interact()?
                 {
                    let temp: HostAndPort = HostAndPort::local(6180)?;
-                  initialize_host(Some(self.data_path.clone()), &self.namespace, temp)?;
+                  initialize_host(Some(self.data_path.clone()), &self.github_username, temp)?;
                 }
             }
-
+            
+            let id = IdentityBlob::from_file(&self.data_path.clone().join(VALIDATOR_FILE))?;
+            
+            self.username = id.account_address.expect(&format!("cannot find an account address in {}", VALIDATOR_FILE)).to_hex_literal();
             // check if the user has the github auth token, and that
             // there is a forked repo on their account.
             // Fork the repo, if it doesn't exist
@@ -99,7 +107,7 @@ impl GenesisWizard {
             // Run registration
             // register the configs on the new forked repo, and make the pull request
             // TODO: V7
-            self.register_configs()?;
+            self.genesis_registration_github()?;
 
             self.make_pull_request()?
         }
@@ -260,9 +268,9 @@ impl GenesisWizard {
     //     }
     // }
 
-fn register_configs(&self) -> anyhow::Result<()> {
+fn genesis_registration_github(&self) -> anyhow::Result<()> {
     genesis_registration::register(
-      self.namespace.clone(),
+      self.username.clone(),
       self.github_username.clone(), // Do the registration on the fork.
       self.repo_name.clone(),
       self.github_token.clone(),
@@ -366,11 +374,11 @@ fn _download_snapshot(&mut self, _app_cfg: &AppCfg) -> anyhow::Result<PathBuf> {
 
 }
 
-fn initialize_host(home_path: Option<PathBuf>, namespace: &str, host: HostAndPort) -> anyhow::Result<()> {
+fn initialize_host(home_path: Option<PathBuf>, username: &str, host: HostAndPort) -> anyhow::Result<()> {
     libra_wallet::keys::refresh_validator_files(home_path.clone())?;
     OLProgress::complete("Initialized validator key files");
     // TODO: set validator fullnode configs. Not NONE
-    SetValidatorConfiguration::new(home_path.clone(), namespace.to_owned(), host, None).set_config_files()?;
+    SetValidatorConfiguration::new(home_path.clone(), username.to_owned(), host, None).set_config_files()?;
     OLProgress::complete("Saved genesis registration files locally");
 
     node_yaml::save_validator_yaml(home_path)?;
@@ -392,4 +400,12 @@ fn test_init() {
   let h = HostAndPort::local(6180).unwrap();
   let test_path = dirs::home_dir().unwrap().join(DEFAULT_DATA_PATH).join("test_genesis");
   initialize_host(Some(test_path),"validator", h).unwrap();
+}
+
+#[test] 
+fn test_register() {
+  let mut g = GenesisWizard::default();
+  g.username = "0xTEST".to_string();
+  g.git_token_check().unwrap();
+  g.genesis_registration_github().unwrap();
 }

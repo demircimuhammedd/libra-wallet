@@ -22,7 +22,7 @@ use zapatos_types::transaction::authenticator::AuthenticationKey;
 // These are consistent with Vendor
 const PRIVATE_KEYS_FILE: &str = "private-keys.yaml";
 pub const PUBLIC_KEYS_FILE: &str = "public-keys.yaml";
-const VALIDATOR_FILE: &str = "validator-identity.yaml";
+pub const VALIDATOR_FILE: &str = "validator-identity.yaml";
 const VFN_FILE: &str = "validator-full-node-identity.yaml";
 // This is 0L specific
 const USER_FILE: &str = "danger-user-private-keys.yaml";
