@@ -51,36 +51,9 @@ impl SetValidatorConfiguration {
 
       let owner_keys_file  =home_dir.join(PUBLIC_KEYS_FILE);
 
-        dbg!(&owner_keys_file);
-
-        // Load owner
-        // let owner_keys_file = if let Some(owner_keys_file) = self.owner_public_identity_file {
-        //     owner_keys_file
-        // } else {
-        //     current_dir()?.join(PUBLIC_KEYS_FILE)
-        // };
         let owner_identity = read_public_identity_file(owner_keys_file.as_path())?;
 
-        // // Load voter
-        // let voter_identity = if let Some(voter_keys_file) = self.voter_public_identity_file {
-        //     read_public_identity_file(voter_keys_file.as_path())?
-        // } else {
-        //     owner_identity.clone()
-        // };
-
         let voter_identity = owner_identity.clone();
-
-        // // Load operator
-        // let (operator_identity, operator_keys_file) =
-        //     if let Some(operator_keys_file) = self.operator_public_identity_file {
-        //         (
-        //             read_public_identity_file(operator_keys_file.as_path())?,
-        //             operator_keys_file,
-        //         )
-        //     } else {
-        //         (owner_identity.clone(), owner_keys_file)
-        //     };
-
         let operator_identity = owner_identity.clone();
         let operator_keys_file = owner_keys_file;
 
