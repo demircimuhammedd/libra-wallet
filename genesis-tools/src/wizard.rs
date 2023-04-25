@@ -69,38 +69,37 @@ impl Default for GenesisWizard {
 }
 impl GenesisWizard {
     /// start wizard for end-to-end genesis
-    pub fn start_wizard(&mut self) -> anyhow::Result<()> {
+    pub fn start_wizard(&mut self, home_dir: Option<PathBuf>) -> anyhow::Result<()> {
+        if let Some(d) = home_dir {
+            self.data_path = d;
+            
+        }
+
+        if !Path::exists(&self.data_path) {
+          println!("\nIt seems you have no files at {}, creating directory now", &self.data_path.display());
+          std::fs::create_dir_all(&self.data_path)?;
+        }
         // check the git token is as expected, and set it.
         self.git_token_check()?;
 
-        let to_genesis = Confirm::new()
-            .with_prompt("Skip registration, straight to genesis?")
+        let to_init = Confirm::new()
+          .with_prompt(format!(
+              "Want to freshen configs at {:?} now?",
+              &self.data_path
+          ))
+          .interact()?;
+        if to_init {
+            let temp: HostAndPort = HostAndPort::local(6180)?;
+            initialize_host(Some(self.data_path.clone()), &self.github_username, temp)?;
+        }
+
+        let to_register = Confirm::new()
+            .with_prompt("Do you need to register for genesis?")
             .interact()
             .unwrap();
 
         // check if .0L folder is clean
-        if !to_genesis {
-            let has_data_path = Path::exists(&self.data_path);
-
-            // initialize app configs
-            if !has_data_path {
-                println!("Let's initialize this host");
-                let temp: HostAndPort = HostAndPort::local(6180)?;
-                initialize_host(Some(self.data_path.clone()), &self.github_username, temp)?;
-            } else {
-                // check if the user wants to overwrite configs
-                if Confirm::new()
-                    .with_prompt(format!(
-                        "Want to freshen configs at {:?} now?",
-                        &self.data_path
-                    ))
-                    .interact()?
-                {
-                    let temp: HostAndPort = HostAndPort::local(6180)?;
-                    initialize_host(Some(self.data_path.clone()), &self.github_username, temp)?;
-                }
-            }
-
+        if to_register {
             let id = IdentityBlob::from_file(&self.data_path.clone().join(VALIDATOR_FILE))?;
 
             self.username = id
@@ -115,28 +114,30 @@ impl GenesisWizard {
             // Fork the repo, if it doesn't exist
             self.git_setup()?;
 
-            // let _app_config = ol_types::config::parse_toml(self.data_path.join("0L.toml"))?;
-
-            // Run registration
-            // register the configs on the new forked repo, and make the pull request
-            // TODO: V7
             self.genesis_registration_github()?;
 
             self.make_pull_request()?
         }
 
         let ready = Confirm::new()
-            .with_prompt("WAIT for everyone to do genesis. Is everyone ready?")
+            .with_prompt("\nNOW WAIT for everyone to do genesis. Is everyone ready?")
             .interact()
             .unwrap();
 
         if ready {
+            
+            let pb = ProgressBar::new(1000).with_style(OLProgress::spinner());
+
+            pb.enable_steady_tick(Duration::from_millis(100));
+            
             genesis_builder::build(
                 self.genesis_repo_org.clone(),
                 self.repo_name.clone(),
                 self.github_token.clone(),
                 self.data_path.clone(),
             )?;
+            pb.finish_and_clear();
+
             OLProgress::complete("Genesis files built");
 
             for _ in (0..10)
@@ -158,7 +159,7 @@ impl GenesisWizard {
             match Input::<String>::new()
                 .with_prompt(&format!(
                     "No github token found, enter one now, or save to {}",
-                    GITHUB_TOKEN_FILENAME
+                    self.data_path.join(GITHUB_TOKEN_FILENAME).display()
                 ))
                 .interact_text()
             {
@@ -252,6 +253,10 @@ impl GenesisWizard {
     // }
 
     fn genesis_registration_github(&self) -> anyhow::Result<()> {
+        
+        let pb = ProgressBar::new(1000).with_style(OLProgress::spinner());
+        pb.enable_steady_tick(Duration::from_millis(100));
+
         genesis_registration::register(
             self.username.clone(),
             self.github_username.clone(), // Do the registration on the fork.
@@ -259,6 +264,8 @@ impl GenesisWizard {
             self.github_token.clone(),
             self.data_path.clone(),
         )?;
+        pb.finish_and_clear();
+
         OLProgress::complete("Registered to genesis on github.");
 
         Ok(())
