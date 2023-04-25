@@ -2,6 +2,7 @@
 //! instead of using many CLI tools.
 //! genesis wizard
 
+use crate::node_yaml;
 ///////
 // TODO: import from libra
 use crate::{hack_cli_progress::OLProgress, genesis_registration};
@@ -369,8 +370,11 @@ fn initialize_host(home_path: Option<PathBuf>, namespace: &str, host: HostAndPor
     libra_wallet::keys::refresh_validator_files(home_path.clone())?;
     OLProgress::complete("Initialized validator key files");
     // TODO: set validator fullnode configs. Not NONE
-    SetValidatorConfiguration::new(home_path, namespace.to_owned(), host, None).set_config_files()?;
+    SetValidatorConfiguration::new(home_path.clone(), namespace.to_owned(), host, None).set_config_files()?;
     OLProgress::complete("Saved genesis registration files locally");
+
+    node_yaml::save_validator_yaml(home_path);
+    OLProgress::complete("Saved validator node yaml file locally");
     Ok(())
 }
 
@@ -386,6 +390,6 @@ fn test_wizard() {
 #[test] 
 fn test_init() {
   let h = HostAndPort::local(6180).unwrap();
-  let test_path = dirs::home_dir().unwrap().join(DEFAULT_DATA_PATH).join("test");
+  let test_path = dirs::home_dir().unwrap().join(DEFAULT_DATA_PATH).join("test_genesis");
   initialize_host(Some(test_path),"validator", h).unwrap();
 }

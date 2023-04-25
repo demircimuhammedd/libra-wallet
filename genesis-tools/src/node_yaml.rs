@@ -5,11 +5,11 @@ use std::path::PathBuf;
 use anyhow::Result;
 use libra_wallet::utils::{write_to_user_only_file, from_yaml};
 
-
-
 pub const NODE_YAML_FILE: &str = "validator.yaml";
 
-fn save_validator_yaml(home_dir: Option<PathBuf>) -> Result<PathBuf> {
+/// Create a validator yaml file to start validator node.
+/// NOTE: this will not work for fullnodes
+pub fn save_validator_yaml(home_dir: Option<PathBuf>) -> Result<PathBuf> {
   let home_dir = home_dir.unwrap_or_else(|| {
     dirs::home_dir().expect("Unable to determine home directory")
     .join(DEFAULT_DATA_PATH)
@@ -94,6 +94,5 @@ fn test_yaml() {
 
   assert!(y.base.data_dir.display().to_string() == format!("{}/data", path.display().to_string()));
   // remove the file and directory
-  // std::fs::remove_file(path.join(NODE_YAML_FILE)).unwrap();
   std::fs::remove_dir_all(path).unwrap();
 }
