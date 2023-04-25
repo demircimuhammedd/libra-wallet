@@ -46,10 +46,12 @@ impl SetValidatorConfiguration {
     }
 
     pub fn set_config_files(self) -> Result<(OperatorConfiguration, OwnerConfiguration)> {
-        let owner_keys_file = self.home_dir
-          .unwrap_or_else(|| dirs::home_dir().unwrap())
-          .join(DEFAULT_VALIDATOR_DIR)
-          .join(PUBLIC_KEYS_FILE);
+        let home_dir = self.home_dir
+          .unwrap_or_else(|| dirs::home_dir().unwrap().join(DEFAULT_VALIDATOR_DIR));
+
+      let owner_keys_file  =home_dir.join(PUBLIC_KEYS_FILE);
+
+        dbg!(&owner_keys_file);
 
         // Load owner
         // let owner_keys_file = if let Some(owner_keys_file) = self.owner_public_identity_file {
@@ -145,20 +147,16 @@ impl SetValidatorConfiguration {
             commission_percentage: 0,
             join_during_genesis: true,
         };
-
+        
         write_to_user_only_file(
-            &dirs::home_dir()
-                .unwrap()
-                .join(DEFAULT_VALIDATOR_DIR)
+            &home_dir
                 .join(OPERATOR_FILE),
             OPERATOR_FILE,
             to_yaml(&operator_config)?.as_bytes(),
         )?;
 
         write_to_user_only_file(
-            &dirs::home_dir()
-                .unwrap()
-                .join(DEFAULT_VALIDATOR_DIR)
+            &home_dir
                 .join(OWNER_FILE),
             OWNER_FILE,
             to_yaml(&owner_config)?.as_bytes(),
