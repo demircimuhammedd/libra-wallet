@@ -36,7 +36,7 @@ consensus:
       from_file:
         waypoint:
           from_file: {path}/genesis/waypoint.txt
-        identity_blob_path: {path}/genesis/validator-identity.yaml
+        identity_blob_path: {path}/validator-identity.yaml
 
 execution:
   genesis_file_location: '{path}/genesis/genesis.blob'
@@ -46,24 +46,23 @@ validator_network:
   mutual_authentication: true
   identity:
     type: 'from_file'
-    path: {path}/genesis/validator-identity.yaml
+    path: {path}/validator-identity.yaml
 
 full_node_networks:
 - network_id:
     private: 'vfn'
   listen_address: '/ip4/0.0.0.0/tcp/6181'
   identity:
-    type: 'from_config'
-    key: 'b0f405a3e75516763c43a2ae1d70423699f34cd68fa9f8c6bb2d67aa87d0af69'
-    peer_id: '00000000000000000000000000000000d58bc7bb154b38039bc9096ce04e1237'
+    type: 'from_file'
+    path: {path}/validator-identity.yaml
 
 api:
   enabled: true
   address: '0.0.0.0:8080'
 ");
 
-    let output_file = home_dir
-          .join(NODE_YAML_FILE);
+    let output_file = home_dir.join(NODE_YAML_FILE);
+    
     write_to_user_only_file(
       &output_file,
       NODE_YAML_FILE,

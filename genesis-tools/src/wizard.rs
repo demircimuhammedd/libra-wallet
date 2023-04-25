@@ -373,7 +373,7 @@ fn initialize_host(home_path: Option<PathBuf>, namespace: &str, host: HostAndPor
     SetValidatorConfiguration::new(home_path.clone(), namespace.to_owned(), host, None).set_config_files()?;
     OLProgress::complete("Saved genesis registration files locally");
 
-    node_yaml::save_validator_yaml(home_path);
+    node_yaml::save_validator_yaml(home_path)?;
     OLProgress::complete("Saved validator node yaml file locally");
     Ok(())
 }
