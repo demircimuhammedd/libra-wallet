@@ -13,7 +13,7 @@ pub const PUBLIC_KEYS_FILE: &str = "public-keys.yaml";
 
 /// Function to publish the validator configuration files to github
 pub fn register(
-  genesis_username: &str,
+  genesis_username: String,
   github_owner: String,
   github_repository: String,
   github_token: String,

@@ -1,4 +1,4 @@
-use std::{env::current_dir, path::PathBuf};
+use std::path::PathBuf;
 
 use anyhow::{bail, Result};
 use zapatos_genesis::config::{HostAndPort, OperatorConfiguration, OwnerConfiguration};
@@ -29,23 +29,6 @@ pub struct SetValidatorConfiguration {
     pub home_dir: Option<PathBuf>,
 }
 
-impl Default for SetValidatorConfiguration {
-    fn default() -> Self {
-        let file = dirs::home_dir()
-            .unwrap()
-            .join(DEFAULT_VALIDATOR_DIR)
-            .join(PUBLIC_KEYS_FILE);
-
-        Self {
-            username: "validator".to_string(),
-            validator_host: HostAndPort::local(6180).unwrap(),
-            full_node_host: None,
-            owner_public_identity_file: Some(file),
-            // operator_public_identity_file: None,
-            // voter_public_identity_file: None,
-        }
-    }
-}
 
 impl SetValidatorConfiguration {
     pub fn new(
@@ -64,7 +47,7 @@ impl SetValidatorConfiguration {
 
     pub fn set_config_files(self) -> Result<(OperatorConfiguration, OwnerConfiguration)> {
         let owner_keys_file = self.home_dir
-          .unwrap_or_else(|| dirs::home_dir().unwrap());
+          .unwrap_or_else(|| dirs::home_dir().unwrap())
           .join(DEFAULT_VALIDATOR_DIR)
           .join(PUBLIC_KEYS_FILE);
 

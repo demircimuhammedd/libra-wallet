@@ -4,46 +4,38 @@
 
 ///////
 // TODO: import from libra
-use crate::hack_cli_progress::OLProgress;
+use crate::{hack_cli_progress::OLProgress, genesis_registration};
 //////
 use crate::github_extensions::LibraGithubClient;
 
+use dirs;
+use indicatif::{ProgressBar, ProgressIterator};
+use std::{fs, path::{Path, PathBuf}, thread, time::Duration};
+use anyhow::bail;
+use dialoguer::{Confirm, Input};
+
+use ol_types::config::AppCfg;
 use libra_wallet::validator_files::SetValidatorConfiguration;
 use zapatos_genesis::config::HostAndPort;
 use zapatos_github_client::Client;
 
-use anyhow::bail;
-use dialoguer::{Confirm, Input};
-// use zapatos_genesis::{
-//     // key::{Key, OperatorKey, OwnerKey, reset_safety_data},
-//     // storage_helper::StorageHelper,
-//     // validator_config::ValidatorConfig,
-//     // validator_operator::ValidatorOperator, verify::Verify,
-//     // waypoint,
-//     // ol_node_files
-// };
-
-use dirs;
-use indicatif::{ProgressBar, ProgressIterator};
-use ol_types::config::AppCfg;
-use std::{fs, path::PathBuf};
-use std::{path::Path, thread, time::Duration};
-
 const DEFAULT_DATA_PATH: &str = ".libra";
 const DEFAULT_GIT_BRANCH: &str = "main";
-
 /// Wizard for genesis
 pub struct GenesisWizard {
-    ///
+    /// a name to use only for genesis purposes
     pub namespace: String,
-    ///
-    pub repo_owner: String,
-    ///
+    /// the github org hosting the genesis repo
+    pub genesis_repo_org: String,
+    /// name of the repo
     pub repo_name: String,
+    /// the registrant's github username
     github_username: String,
+    /// the registrant's github api token.
     github_token: String,
+    /// the home path of the user
     data_path: PathBuf,
-    ///
+    /// what epoch is the fork happening from
     pub epoch: Option<u64>,
 }
 
@@ -54,8 +46,9 @@ impl Default for GenesisWizard {
 
         Self {
             namespace: "alice".to_string(),
-            repo_owner: "0l-testnet".to_string(),
-            repo_name: "dev-genesis".to_string(),
+            genesis_repo_org: "0o-de-lally".to_string(),
+            // genesis_repo_org: "alice".to_string(),
+            repo_name: "a-genesis".to_string(),
             github_username: "".to_string(),
             github_token: "".to_string(),
             data_path,
@@ -99,12 +92,12 @@ impl GenesisWizard {
             // Fork the repo, if it doesn't exist
             self.git_setup()?;
 
-            let _app_config = ol_types::config::parse_toml(self.data_path.join("0L.toml"))?;
+            // let _app_config = ol_types::config::parse_toml(self.data_path.join("0L.toml"))?;
 
             // Run registration
             // register the configs on the new forked repo, and make the pull request
             // TODO: V7
-            // self.register_configs(&app_config)?;
+            self.register_configs()?;
 
             self.make_pull_request()?
         }
@@ -116,7 +109,7 @@ impl GenesisWizard {
 
         if ready {
             // assumes this environment is set up properly
-            let app_config = ol_types::config::parse_toml(self.data_path.join("0L.toml"))?;
+            // let app_config = ol_types::config::parse_toml(self.data_path.join("0L.toml"))?;
             // run genesis
 
             // let snapshot_path = if Confirm::new()
@@ -135,19 +128,15 @@ impl GenesisWizard {
             // run::default_run(
             //     self.data_path.clone(),
             //     snapshot_path,
-            //     self.repo_owner.clone(),
+            //     self.genesis_repo_org.clone(),
             //     self.repo_name.clone(),
             //     self.github_token.clone(),
             //     false,
             // )?;
 
             // make node files
-            self.make_node_files(&app_config)?;
+            self.make_node_files()?;
 
-            // reset the safety rules
-
-            //TODO: do we need to do this in V7?
-            // reset_safety_data(&self.data_path, &app_config.format_oper_namespace());
 
             // check db
             // self.maybe_backup_db();
@@ -193,7 +182,7 @@ impl GenesisWizard {
         OLProgress::complete("github token found");
 
         let temp_gh_client = Client::new(
-            self.repo_owner.clone(), // doesn't matter
+            self.genesis_repo_org.clone(), // doesn't matter
             self.repo_name.clone(),
             DEFAULT_GIT_BRANCH.to_string(),
             self.github_token.clone(),
@@ -217,7 +206,7 @@ impl GenesisWizard {
 
     fn git_setup(&mut self) -> anyhow::Result<()> {
         let gh_client = Client::new(
-            self.repo_owner.clone(),
+            self.genesis_repo_org.clone(),
             self.repo_name.clone(),
             DEFAULT_GIT_BRANCH.to_string(),
             self.github_token.clone(),
@@ -240,7 +229,7 @@ impl GenesisWizard {
                 ))
                 .interact()
             {
-                Ok(true) => gh_client.fork_genesis_repo(&self.repo_owner, &self.repo_name)?,
+                Ok(true) => gh_client.fork_genesis_repo(&self.genesis_repo_org, &self.repo_name)?,
                 _ => bail!("no forked repo on your account, we need it to continue"),
             }
         } else {
@@ -269,124 +258,21 @@ impl GenesisWizard {
     //     }
     // }
 
-    // fn register_configs(&self, app_cfg: &AppCfg) -> anyhow::Result<()> {
-    //     let pb = ProgressBar::new(4).with_style(OLProgress::bar());
+fn register_configs(&self) -> anyhow::Result<()> {
+    genesis_registration::register(
+      self.namespace.clone(),
+      self.github_username.clone(), // Do the registration on the fork.
+      self.repo_name.clone(),
+      self.github_token.clone(),
+      self.data_path.clone(),
+    )?;
+    OLProgress::complete("Registered to genesis on github.");
 
-    //     // These are abstractions for github and the local key storage.
-    //     let val = Key::validator_backend(
-    //         app_cfg.format_oper_namespace().clone(),
-    //         self.data_path.clone(),
-    //     )?;
+    Ok(())
 
-    //     let owner_shared = Key::shared_backend(
-    //         app_cfg.format_owner_namespace().clone(),
-    //         self.github_username.clone(), // NOTE: we need to write to the github user.
-    //         self.repo_name.clone(),
-    //         self.data_path.clone(),
-    //     )?;
+}
 
-    //     let oper_shared = Key::shared_backend(
-    //         app_cfg.format_oper_namespace().clone(),
-    //         self.github_username.clone(), // NOTE: we need to write to the github user.
-    //         self.repo_name.clone(),
-    //         self.data_path.clone(),
-    //     )?;
-
-    //     //   # OPER does this
-    //     // # Submits operator key to github, and creates local OPERATOR_ACCOUNT
-    //     // oper-key:
-    //     // 	cargo run -p diem-genesis-tool ${CARGO_ARGS} -- operator-key \
-    //     // 	--validator-backend ${LOCAL} \
-    //     // 	--shared-backend ${REMOTE}
-
-    //     pb.inc(1);
-    //     pb.set_message("registering the OWNER account.");
-
-    //     let own = OwnerKey {
-    //         key: Key::new(&val, &owner_shared),
-    //     };
-
-    //     own.execute()?;
-
-    //     pb.set_message("registering the OPERATOR account.");
-    //     let op = OperatorKey {
-    //         key: Key::new(&val, &oper_shared),
-    //     };
-
-    //     op.execute()?;
-
-    //     // # OWNER does this
-    //     // # Submits operator key to github, does *NOT* create the OWNER_ACCOUNT locally
-    //     // owner-key:
-    //     // 	cargo run -p diem-genesis-tool ${CARGO_ARGS} --  owner-key \
-    //     // 	--validator-backend ${LOCAL} \
-    //     // 	--shared-backend ${REMOTE}
-
-    //     pb.inc(1);
-    //     pb.set_message("registering the OPERATOR account.");
-    //     // The oper key is saved locally as key + -oper. This little hack works..
-    //     let set_oper =
-    //         ValidatorOperator::new(app_cfg.format_oper_namespace(), &owner_shared);
-    //     set_oper.execute()?;
-    //     // # OWNER does this
-    //     // # Links to an operator on github, creates the OWNER_ACCOUNT locally
-    //     // assign:
-    //     // 	cargo run -p diem-genesis-tool ${CARGO_ARGS} --  set-operator \
-    //     // 	--operator-name ${OPER} \
-    //     // 	--shared-backend ${REMOTE}
-
-    //     pb.inc(1);
-    //     pb.set_message("registering the validator configs.");
-    //     let val_config = ValidatorConfig::new(
-    //         app_cfg.format_owner_namespace().clone(),
-    //         NetworkAddress::from_str(&*format!(
-    //             "{}{}",
-    //             Protocol::Ip4(app_cfg.profile.ip),
-    //             Protocol::Tcp(6180)
-    //         ))
-    //         .unwrap(),
-    //         NetworkAddress::from_str(&*format!(
-    //             "{}{}",
-    //             Protocol::Ip4(app_cfg.profile.vfn_ip.unwrap()),
-    //             Protocol::Tcp(6179)
-    //         ))
-    //         .unwrap(),
-    //         &oper_shared,
-    //         &val,
-    //         false,
-    //         ChainId::new(app_cfg.chain_info.chain_id.id()),
-    //     );
-    //     val_config.execute()?;
-    //     pb.inc(1);
-
-    //     // # OPER does this
-    //     // # Submits signed validator registration transaction to github.
-    //     // reg:
-    //     // 	cargo run -p diem-genesis-tool ${CARGO_ARGS} --  validator-config \
-    //     // 	--owner-name ${OWNER} \
-    //     // 	--chain-id ${CHAIN_ID} \
-    //     // 	--validator-address "/ip4/${IP}/tcp/6180" \
-    //     // 	--fullnode-address "/ip4/${IP}/tcp/6179" \
-    //     // 	--validator-backend ${LOCAL} \
-    //     // 	--shared-backend ${REMOTE}
-
-    //     pb.finish_and_clear();
-    //     OLProgress::complete("Registered configs on github");
-
-    //     Ok(())
-    // }
-
-    // fn check_keys_and_genesis(&self, app_cfg: &AppCfg) -> anyhow::Result<String> {
-    //     let val = Key::validator_backend(
-    //         app_cfg.format_owner_namespace().clone(),
-    //         self.data_path.clone(),
-    //     )?;
-
-    //   let v = Verify::new(&val,self.data_path.join("genesis.blob"));
-    //   Ok(v.execute()?)
-    // }
-
-    fn _download_snapshot(&mut self, _app_cfg: &AppCfg) -> anyhow::Result<PathBuf> {
+fn _download_snapshot(&mut self, _app_cfg: &AppCfg) -> anyhow::Result<PathBuf> {
         if let Some(e) = self.epoch {
             if !Confirm::new()
                 .with_prompt(&format!("So are we migrating data from epoch {}?", e))
@@ -434,7 +320,7 @@ impl GenesisWizard {
 
         let pb = ProgressBar::new(1).with_style(OLProgress::bar());
         let gh_client = Client::new(
-            self.repo_owner.clone(),
+            self.genesis_repo_org.clone(),
             self.repo_name.clone(),
             DEFAULT_GIT_BRANCH.to_string(),
             api_token.clone(),
@@ -442,7 +328,7 @@ impl GenesisWizard {
         // repository_owner, genesis_repo_name, username
         // This will also fail if there already is a pull request!
         match gh_client.make_genesis_pull_request(
-            &*self.repo_owner,
+            &*self.genesis_repo_org,
             &*self.repo_name,
             &*self.github_username,
         ) {
@@ -471,60 +357,19 @@ impl GenesisWizard {
         }
     }
 
-    fn make_node_files(&self, _app_cfg: &AppCfg) -> anyhow::Result<()> {
-        // create the files necessary to run the node
-        // TODO: V7
-        // let waypoint = waypoint::extract_waypoint_from_file(
-        //     &self.data_path.join("genesis.blob")
-        // )?;
-        // println!("waypoint: {:?}", waypoint);
-        // fs::write(self.data_path.join("genesis_waypoint.txt"), waypoint.to_string())?;
-
-
-        // TODO: Do we need to update waypoint in V7?
-        // init_cmd::update_waypoint(&mut app_cfg.clone(), Option::from(waypoint), None)?;
-
-        // make extract-waypoint && cargo r -p ol -- init --update-waypoint --waypoint $(shell cat ${DATA_PATH}/genesis_waypoint.txt)
-        //
-        // 1. cargo run -p diem-genesis-tool ${CARGO_ARGS} -- create-waypoint \
-        // 	--genesis-path ${DATA_PATH}/genesis.blob \
-        // 	--extract \
-        // 	--chain-id ${CHAIN_ID} \
-        // 	--shared-backend ${REMOTE} \
-        // 	| awk -F 'Waypoint: '  '{print $$2}' > ${DATA_PATH}/genesis_waypoint.txt\
-
-        // 2. cargo r -p ol -- init --update-waypoint --waypoint $(shell cat ${DATA_PATH}/genesis_waypoint.txt)
-
-        // ol_node_files::onboard_helper_all_files(
-        //     self.data_path.clone(),
-        //     NamedChain::MAINNET,
-        //     Some(self.repo_owner.clone()),
-        //     Some(self.repo_name.clone()),
-        //     &app_cfg.format_oper_namespace(),
-        //     &Some(self.data_path.join("genesis.blob")),
-        //     &false,
-        //     None,
-        //     &None,
-        //     Some(app_cfg.profile.ip))?;
-
-        // node-files:
-        //     cargo run -p diem-genesis-tool ${CARGO_ARGS} -- files \
-        // --chain-id ${CHAIN_ID} \
-        // --validator-backend ${LOCAL} \
-        // --data-path ${DATA_PATH} \
-        // --namespace ${ACC}-oper \
-        // --genesis-path ${DATA_PATH}/genesis.blob \
-        // --val-ip-address ${IP} \
-
-        // rm -rf ~/.0L/db
+    fn make_node_files(&self) -> anyhow::Result<()> {
+        // TODO: Get node yaml file template.
         Ok(())
     }
 
 }
 
 fn initialize_host(home_path: Option<PathBuf>, namespace: &str, host: HostAndPort) -> anyhow::Result<()> {
-    libra_wallet::keys::refresh_validator_files(home_path)?;
-    SetValidatorConfiguration::new(namespace.to_owned(), host).set_config_files()?;
+    libra_wallet::keys::refresh_validator_files(home_path.clone())?;
+    OLProgress::complete("Initialized validator key files");
+    // TODO: set validator fullnode configs. Not NONE
+    SetValidatorConfiguration::new(home_path, namespace.to_owned(), host, None).set_config_files()?;
+    OLProgress::complete("Saved genesis registration files locally");
     Ok(())
 }
 
