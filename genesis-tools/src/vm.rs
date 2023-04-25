@@ -1,46 +1,28 @@
-
-use zapatos_vm_genesis::{
-  Validator,
-  verify_genesis_write_set,
-  publish_framework,
-  genesis_context::GenesisStateView,
-  emit_new_block_and_epoch_event,
-  set_genesis_end,
-  allow_core_resources_to_set_version,
-  create_and_initialize_validators,
-  initialize_on_chain_governance,
-  initialize_aptos_coin,
-  initialize_core_resources_and_aptos_coin,
-  initialize_features,
-  initialize,
-  validate_genesis_config,
-  GenesisConfiguration,
-  default_gas_schedule,
-  mainnet_genesis_config,
-  GENESIS_KEYPAIR, AccountBalance, EmployeePool, ValidatorWithCommissionRate, create_accounts, create_employee_validators, create_and_initialize_validators_with_commission,
-
-};
-use zapatos_crypto::{
-    ed25519::{Ed25519PublicKey},
-    HashValue,
-};
+use ol_types::legacy_recovery::LegacyRecovery;
+use zapatos_crypto::{ed25519::Ed25519PublicKey, HashValue};
 use zapatos_framework::{self, ReleaseBundle};
 use zapatos_gas::{
-    AbstractValueSizeGasParameters, ChangeSetConfigs,
-    NativeGasParameters, LATEST_GAS_FEATURE_VERSION,
+    AbstractValueSizeGasParameters, ChangeSetConfigs, NativeGasParameters,
+    LATEST_GAS_FEATURE_VERSION,
 };
 use zapatos_types::{
     chain_id::ChainId,
-    on_chain_config::{
-        Features, GasScheduleV2, OnChainConsensusConfig, TimedFeatures,
-    },
+    on_chain_config::{Features, GasScheduleV2, OnChainConsensusConfig, TimedFeatures},
     transaction::{ChangeSet, Transaction, WriteSetPayload},
 };
 use zapatos_vm::{
     data_cache::AsMoveResolver,
     move_vm_ext::{MoveVmExt, SessionId},
 };
-use ol_types::legacy_recovery::LegacyRecovery;
+use zapatos_vm_genesis::{
+    allow_core_resources_to_set_version, create_accounts, create_and_initialize_validators,
+    create_and_initialize_validators_with_commission, create_employee_validators,
+    default_gas_schedule, emit_new_block_and_epoch_event, genesis_context::GenesisStateView,
+    initialize, initialize_aptos_coin, initialize_core_resources_and_aptos_coin,
+    initialize_features, initialize_on_chain_governance, mainnet_genesis_config, publish_framework,
+    set_genesis_end, validate_genesis_config, verify_genesis_write_set, AccountBalance,
+    EmployeePool, GenesisConfiguration, Validator, ValidatorWithCommissionRate, GENESIS_KEYPAIR,
+};
 
 use crate::convert_types;
 
@@ -74,13 +56,12 @@ pub fn encode_zapatos_recovery_genesis_change_set(
     gas_schedule: &GasScheduleV2,
 ) -> ChangeSet {
     if let Some(r) = recovery {
-      r.into_iter()
-      .for_each(|a| {
-        // dbg!(a.account);
-        if let Some(acc) = a.account {
-            dbg!(convert_types::convert_account(acc).unwrap());
-        }
-      })
+        r.into_iter().for_each(|a| {
+            // dbg!(a.account);
+            if let Some(acc) = a.account {
+                dbg!(convert_types::convert_account(acc).unwrap());
+            }
+        })
     }
 
     validate_genesis_config(genesis_config);
@@ -269,6 +250,7 @@ pub fn encode_aptos_mainnet_genesis_transaction(
 
 #[test]
 pub fn test_mainnet_end_to_end() {
+    use zapatos_cached_packages;
     use zapatos_types::{
         account_address::{self, AccountAddress},
         on_chain_config::{OnChainConfig, ValidatorSet},
@@ -276,7 +258,6 @@ pub fn test_mainnet_end_to_end() {
         write_set::{TransactionWrite, WriteSet},
     };
     use zapatos_vm_genesis::TestValidator;
-    use zapatos_cached_packages;
     const APTOS_COINS_BASE_WITH_DECIMALS: u64 = u64::pow(10, 8);
 
     let balance = 10_000_000 * APTOS_COINS_BASE_WITH_DECIMALS;

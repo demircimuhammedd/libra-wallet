@@ -24,7 +24,7 @@ const PRIVATE_KEYS_FILE: &str = "private-keys.yaml";
 pub const PUBLIC_KEYS_FILE: &str = "public-keys.yaml";
 pub const VALIDATOR_FILE: &str = "validator-identity.yaml";
 const VFN_FILE: &str = "validator-full-node-identity.yaml";
-// This is 0L specific
+// This is Libra specific
 const USER_FILE: &str = "danger-user-private-keys.yaml";
 
 // new keys for user
@@ -189,7 +189,7 @@ pub fn network_keys_x25519_from_ed25519(pri_key_str: &str) -> anyhow::Result<x25
 #[test]
 // checks we can get deterministic bls keys from the seed from mnemonic.
 fn deterministic_bls_from_seed() {
-    use crate::keys::wallet::get_account_from_mnem;
+    use ol_keys::wallet::get_account_from_mnem;
     use crate::legacy::get_keys_from_mnem;
     use zapatos_crypto::ValidCryptoMaterialStringExt;
 

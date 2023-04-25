@@ -1,16 +1,27 @@
-use std::{path::{Path, PathBuf}, cmp::Ordering};
-use zapatos_types::account_address::AccountAddress;
-use anyhow::{Result, bail, anyhow};
-use libra_wallet::utils::{check_if_file_exists, write_to_user_only_file, from_yaml};
-use zapatos_crypto::{ed25519::Ed25519PublicKey, ValidCryptoMaterial, bls12381};
-use zapatos_framework::ReleaseBundle;
-use zapatos_genesis::{GenesisInfo, config::{Layout, StringOwnerConfiguration, ValidatorConfiguration, StringOperatorConfiguration}, builder::GenesisConfiguration};
-use zapatos_github_client::Client;
-use zapatos_types::{on_chain_config::OnChainConsensusConfig, account_address::AccountAddressWithChecks};
-use zapatos_vm_genesis::default_gas_schedule;
-use zapatos_crypto::ValidCryptoMaterialStringExt;
+use anyhow::{anyhow, bail, Result};
+use libra_wallet::utils::{check_if_file_exists, from_yaml, write_to_user_only_file};
 use std::str::FromStr;
+use std::{
+    cmp::Ordering,
+    path::{Path, PathBuf},
+};
 use zapatos_crypto::ed25519::ED25519_PUBLIC_KEY_LENGTH;
+use zapatos_crypto::ValidCryptoMaterialStringExt;
+use zapatos_crypto::{bls12381, ed25519::Ed25519PublicKey, ValidCryptoMaterial};
+use zapatos_framework::ReleaseBundle;
+use zapatos_genesis::{
+    builder::GenesisConfiguration,
+    config::{
+        Layout, StringOperatorConfiguration, StringOwnerConfiguration, ValidatorConfiguration,
+    },
+    GenesisInfo,
+};
+use zapatos_github_client::Client;
+use zapatos_types::account_address::AccountAddress;
+use zapatos_types::{
+    account_address::AccountAddressWithChecks, on_chain_config::OnChainConsensusConfig,
+};
+use zapatos_vm_genesis::default_gas_schedule;
 
 use crate::wizard::DEFAULT_GIT_BRANCH;
 
@@ -22,54 +33,52 @@ const WAYPOINT_FILE: &str = "waypoint.txt";
 const GENESIS_FILE: &str = "genesis.blob";
 
 pub fn build(
-  github_owner: String,
-  github_repository: String,
-  github_token: String,
-  home_path: PathBuf,
+    github_owner: String,
+    github_repository: String,
+    github_token: String,
+    home_path: PathBuf,
 ) -> Result<Vec<PathBuf>> {
-        let output_dir = home_path; // TODO
+    let output_dir = home_path.join("genesis"); // TODO
+    std::fs::create_dir_all(&output_dir)?;
 
-        let genesis_file = output_dir.join("genesis").join(GENESIS_FILE);
-        let waypoint_file = output_dir.join("genesis").join(WAYPOINT_FILE);
-        check_if_file_exists(genesis_file.as_path())?;
-        check_if_file_exists(waypoint_file.as_path())?;
+    let genesis_file = output_dir.join(GENESIS_FILE);
+    let waypoint_file = output_dir.join(WAYPOINT_FILE);
 
-        // Generate genesis and waypoint files
-        let (genesis_bytes, waypoint) = {
-            let mut test_genesis = fetch_genesis_info(github_owner, github_repository, github_token)?;
-            let genesis_bytes = bcs::to_bytes(test_genesis.clone().get_genesis())?;
-            (genesis_bytes, test_genesis.generate_waypoint()?)
-        };
+    check_if_file_exists(genesis_file.as_path())?;
+    check_if_file_exists(waypoint_file.as_path())?;
 
-        write_to_user_only_file(genesis_file.as_path(), GENESIS_FILE, &genesis_bytes)?;
-        write_to_user_only_file(
-            waypoint_file.as_path(),
-            WAYPOINT_FILE,
-            waypoint.to_string().as_bytes(),
-        )?;
-        Ok(vec![genesis_file, waypoint_file])
-    }
+    // Generate genesis and waypoint files
+    let (genesis_bytes, waypoint) = {
+        let mut test_genesis = fetch_genesis_info(github_owner, github_repository, github_token)?;
+        let genesis_bytes = bcs::to_bytes(test_genesis.clone().get_genesis())?;
+        (genesis_bytes, test_genesis.generate_waypoint()?)
+    };
 
+    write_to_user_only_file(genesis_file.as_path(), GENESIS_FILE, &genesis_bytes)?;
+    write_to_user_only_file(
+        waypoint_file.as_path(),
+        WAYPOINT_FILE,
+        waypoint.to_string().as_bytes(),
+    )?;
+    Ok(vec![genesis_file, waypoint_file])
+}
 
-    /// Retrieves all information for mainnet genesis from the Git repository
+/// Retrieves all information for mainnet genesis from the Git repository
 pub fn fetch_genesis_info(
-  github_owner: String,
-  github_repository: String,
-  github_token: String,
+    github_owner: String,
+    github_repository: String,
+    github_token: String,
 ) -> Result<GenesisInfo> {
     // let client = git_options.get_client()?;
     let client = Client::new(
-            github_owner.clone(), // doesn't matter
-            github_repository.clone(),
-            DEFAULT_GIT_BRANCH.to_string(),
-            github_token.clone(),
-        );
-
-    
+        github_owner.clone(), // doesn't matter
+        github_repository.clone(),
+        DEFAULT_GIT_BRANCH.to_string(),
+        github_token.clone(),
+    );
 
     // let layout: Layout = client.get(Path::new(LAYOUT_FILE))?;
-    
-    
+
     let l_file = client.get_file(&Path::new(LAYOUT_FILE).display().to_string())?;
     let layout: Layout = from_yaml(&String::from_utf8(base64::decode(l_file)?)?)?;
 
@@ -87,7 +96,10 @@ pub fn fetch_genesis_info(
     let framework = bcs::from_bytes::<ReleaseBundle>(&bytes)?;
 
     // let framework = client.get_framework()?;
-    let dummy_root = Ed25519PublicKey::from_encoded_string("0x0000000000000000000000000000000000000000000000000000000000000000").expect("could not parse dummy root");
+    let dummy_root = Ed25519PublicKey::from_encoded_string(
+        "0x0000000000000000000000000000000000000000000000000000000000000000",
+    )
+    .expect("could not parse dummy root");
 
     Ok(GenesisInfo::new(
         layout.chain_id,
@@ -125,10 +137,10 @@ fn get_validator_configs(
         match get_config(client, user, is_mainnet) {
             Ok(validator) => {
                 validators.push(validator);
-            },
+            }
             Err(failure) => {
                 errors.push(format!("{}: {:?}", user, failure));
-            },
+            }
         }
     }
 
@@ -140,18 +152,15 @@ fn get_validator_configs(
 }
 
 /// Do proper parsing so more information is known about failures
-fn get_config(
-    client: &Client,
-    user: &str,
-    _is_mainnet: bool,
-) -> Result<ValidatorConfiguration> {
+fn get_config(client: &Client, user: &str, _is_mainnet: bool) -> Result<ValidatorConfiguration> {
     // Load a user's configuration files
     let dir = PathBuf::from(user);
     let owner_file = dir.join(OWNER_FILE);
     let owner_file = owner_file.as_path();
 
     let file = client.get_file(&Path::new(owner_file).display().to_string())?;
-    let owner_config: StringOwnerConfiguration = from_yaml(&String::from_utf8(base64::decode(file)?)?)?;
+    let owner_config: StringOwnerConfiguration =
+        from_yaml(&String::from_utf8(base64::decode(file)?)?)?;
 
     // Check and convert fields in owner file
     let owner_account_address: AccountAddress = parse_required_option(
@@ -246,8 +255,9 @@ fn get_config(
     let operator_file = operator_file.as_path();
 
     let file = client.get_file(&Path::new(operator_file).display().to_string())?;
-    let operator_config: StringOperatorConfiguration  = from_yaml(&String::from_utf8(base64::decode(file)?)?)?;
-    
+    let operator_config: StringOperatorConfiguration =
+        from_yaml(&String::from_utf8(base64::decode(file)?)?)?;
+
     // let operator_config = client.get::<StringOperatorConfiguration>(operator_file)?;
 
     // Check and convert fields in operator file
@@ -329,7 +339,6 @@ fn get_config(
     })
 }
 
-
 // TODO: Move into the Crypto libraries
 fn parse_key<T: ValidCryptoMaterial>(num_bytes: usize, str: &str) -> Result<T> {
     let num_chars: usize = num_bytes * 2;
@@ -348,7 +357,7 @@ fn parse_key<T: ValidCryptoMaterial>(num_bytes: usize, str: &str) -> Result<T> {
                 working.len(),
                 num_chars
             )
-        },
+        }
         Ordering::Greater => {
             anyhow::bail!(
                 "Key {} is too long {} must be {} hex characters with or without a 0x in front",
@@ -356,8 +365,8 @@ fn parse_key<T: ValidCryptoMaterial>(num_bytes: usize, str: &str) -> Result<T> {
                 working.len(),
                 num_chars
             )
-        },
-        Ordering::Equal => {},
+        }
+        Ordering::Equal => {}
     }
 
     if !working.chars().all(|c| char::is_ascii_hexdigit(&c)) {
@@ -383,11 +392,7 @@ fn parse_required_option<F: Fn(&str) -> Result<T, E>, T, E: std::fmt::Display>(
             )
         })
     } else {
-        Err(anyhow!(
-            "File {} is missing {}",
-            file.display(),
-            field_name
-        ))
+        Err(anyhow!("File {} is missing {}", file.display(), field_name))
     }
 }
 
@@ -415,13 +420,12 @@ fn parse_optional_option<F: Fn(&str) -> Result<T, E>, T, E: std::fmt::Display>(
 
 #[test]
 fn test_build() {
-  let gh_token_path = dirs::home_dir().unwrap().join(".libra").join("github_token.txt");
-  let token = std::fs::read_to_string(&gh_token_path).unwrap();
+    let gh_token_path = dirs::home_dir()
+        .unwrap()
+        .join(".libra")
+        .join("github_token.txt");
+    let token = std::fs::read_to_string(&gh_token_path).unwrap();
 
-  let _genesis_info = fetch_genesis_info(
-    "0o-de-lally".to_string(),
-    "a-genesis".to_string(),
-    token,
-  ).unwrap();
+    let _genesis_info =
+        fetch_genesis_info("0o-de-lally".to_string(), "a-genesis".to_string(), token).unwrap();
 }
-

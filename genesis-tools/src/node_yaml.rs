@@ -1,23 +1,24 @@
 //! saves a validator yaml file with the minimal configurations.
 
 use crate::wizard::DEFAULT_DATA_PATH;
-use std::path::PathBuf;
 use anyhow::Result;
-use libra_wallet::utils::{write_to_user_only_file, from_yaml};
+use libra_wallet::utils::write_to_user_only_file;
+use std::path::PathBuf;
 
 pub const NODE_YAML_FILE: &str = "validator.yaml";
 
 /// Create a validator yaml file to start validator node.
 /// NOTE: this will not work for fullnodes
 pub fn save_validator_yaml(home_dir: Option<PathBuf>) -> Result<PathBuf> {
-  let home_dir = home_dir.unwrap_or_else(|| {
-    dirs::home_dir().expect("Unable to determine home directory")
-    .join(DEFAULT_DATA_PATH)
-  });
-  let path = home_dir.display().to_string();
+    let home_dir = home_dir.unwrap_or_else(|| {
+        dirs::home_dir()
+            .expect("Unable to determine home directory")
+            .join(DEFAULT_DATA_PATH)
+    });
+    let path = home_dir.display().to_string();
 
-  let template = format!(
-"
+    let template = format!(
+        "
 base:
   role: 'validator'
   data_dir: '{path}/data'
@@ -59,39 +60,39 @@ full_node_networks:
 api:
   enabled: true
   address: '0.0.0.0:8080'
-");
+"
+    );
 
     let output_file = home_dir.join(NODE_YAML_FILE);
-    
-    write_to_user_only_file(
-      &output_file,
-      NODE_YAML_FILE,
-      &template.as_bytes(),
-    )?;
+
+    write_to_user_only_file(&output_file, NODE_YAML_FILE, &template.as_bytes())?;
 
     Ok(output_file)
-
 }
 
-#[test] 
+#[test]
 fn test_yaml() {
-  use zapatos_config::config::NodeConfig;
+    use libra_wallet::utils::from_yaml;
+    use zapatos_config::config::NodeConfig;
 
-  let path = dirs::home_dir().expect("Unable to determine home directory")
-    .join(DEFAULT_DATA_PATH)
-    .join("test_yaml");
+    let path = dirs::home_dir()
+        .expect("Unable to determine home directory")
+        .join(DEFAULT_DATA_PATH)
+        .join("test_yaml");
 
-  std::fs::create_dir_all(&path).unwrap();
+    std::fs::create_dir_all(&path).unwrap();
 
-  let file = save_validator_yaml(Some(path.clone())).unwrap();
+    let file = save_validator_yaml(Some(path.clone())).unwrap();
 
+    let read = std::fs::read_to_string(&file).unwrap();
 
-  let read = std::fs::read_to_string(&file).unwrap();
-  let y: NodeConfig = from_yaml(&read).unwrap();
+    let y: NodeConfig = from_yaml(&read).unwrap();
 
-  assert!(y.base.role.is_validator());
+    assert!(y.base.role.is_validator());
 
-  assert!(y.base.data_dir.display().to_string() == format!("{}/data", path.display().to_string()));
-  // remove the file and directory
-  std::fs::remove_dir_all(path).unwrap();
+    assert!(
+        y.base.data_dir.display().to_string() == format!("{}/data", path.display().to_string())
+    );
+    // remove the file and directory
+    std::fs::remove_dir_all(path).unwrap();
 }

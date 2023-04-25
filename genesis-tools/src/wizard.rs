@@ -2,28 +2,30 @@
 //! instead of using many CLI tools.
 //! genesis wizard
 
-use crate::{node_yaml, genesis_builder};
+use crate::{genesis_builder, node_yaml};
 ///////
 // TODO: import from libra
-use crate::{hack_cli_progress::OLProgress, genesis_registration};
+use crate::{genesis_registration, hack_cli_progress::OLProgress};
 //////
 use crate::github_extensions::LibraGithubClient;
 
-use dirs;
-use indicatif::{ProgressBar, ProgressIterator};
-use std::{fs, path::{Path, PathBuf}, thread, time::Duration};
 use anyhow::bail;
 use dialoguer::{Confirm, Input};
-
-use ol_types::config::AppCfg;
-use libra_wallet::{
-  validator_files::SetValidatorConfiguration,
-  keys::VALIDATOR_FILE
+use dirs;
+use indicatif::{ProgressBar, ProgressIterator};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+    thread,
+    time::Duration,
 };
 
+use libra_wallet::{keys::VALIDATOR_FILE, validator_files::SetValidatorConfiguration};
+use ol_types::config::AppCfg;
+
+use zapatos_config::config::IdentityBlob;
 use zapatos_genesis::config::HostAndPort;
 use zapatos_github_client::Client;
-use zapatos_config::config::IdentityBlob;
 
 pub const DEFAULT_DATA_PATH: &str = ".libra";
 pub const DEFAULT_GIT_BRANCH: &str = "main";
@@ -49,7 +51,9 @@ pub struct GenesisWizard {
 impl Default for GenesisWizard {
     /// testnet values for genesis wizard
     fn default() -> Self {
-        let data_path = dirs::home_dir().expect("no home dir found").join(DEFAULT_DATA_PATH);
+        let data_path = dirs::home_dir()
+            .expect("no home dir found")
+            .join(DEFAULT_DATA_PATH);
 
         Self {
             username: "alice".to_string(),
@@ -86,17 +90,26 @@ impl GenesisWizard {
             } else {
                 // check if the user wants to overwrite configs
                 if Confirm::new()
-                    .with_prompt(format!("Want to freshen configs at {:?} now?", &self.data_path))
+                    .with_prompt(format!(
+                        "Want to freshen configs at {:?} now?",
+                        &self.data_path
+                    ))
                     .interact()?
                 {
-                   let temp: HostAndPort = HostAndPort::local(6180)?;
-                  initialize_host(Some(self.data_path.clone()), &self.github_username, temp)?;
+                    let temp: HostAndPort = HostAndPort::local(6180)?;
+                    initialize_host(Some(self.data_path.clone()), &self.github_username, temp)?;
                 }
             }
-            
+
             let id = IdentityBlob::from_file(&self.data_path.clone().join(VALIDATOR_FILE))?;
-            
-            self.username = id.account_address.expect(&format!("cannot find an account address in {}", VALIDATOR_FILE)).to_hex_literal();
+
+            self.username = id
+                .account_address
+                .expect(&format!(
+                    "cannot find an account address in {}",
+                    VALIDATOR_FILE
+                ))
+                .to_hex_literal();
             // check if the user has the github auth token, and that
             // there is a forked repo on their account.
             // Fork the repo, if it doesn't exist
@@ -126,7 +139,6 @@ impl GenesisWizard {
             )?;
             OLProgress::complete("Genesis files built");
 
-
             for _ in (0..10)
                 .progress_with_style(OLProgress::fun())
                 .with_message("Initializing 0L")
@@ -144,7 +156,10 @@ impl GenesisWizard {
         let gh_token_path = self.data_path.join(GITHUB_TOKEN_FILENAME);
         if !Path::exists(&gh_token_path) {
             match Input::<String>::new()
-                .with_prompt(&format!("No github token found, enter one now, or save to {}", GITHUB_TOKEN_FILENAME))
+                .with_prompt(&format!(
+                    "No github token found, enter one now, or save to {}",
+                    GITHUB_TOKEN_FILENAME
+                ))
                 .interact_text()
             {
                 Ok(s) => {
@@ -236,21 +251,20 @@ impl GenesisWizard {
     //     }
     // }
 
-fn genesis_registration_github(&self) -> anyhow::Result<()> {
-    genesis_registration::register(
-      self.username.clone(),
-      self.github_username.clone(), // Do the registration on the fork.
-      self.repo_name.clone(),
-      self.github_token.clone(),
-      self.data_path.clone(),
-    )?;
-    OLProgress::complete("Registered to genesis on github.");
+    fn genesis_registration_github(&self) -> anyhow::Result<()> {
+        genesis_registration::register(
+            self.username.clone(),
+            self.github_username.clone(), // Do the registration on the fork.
+            self.repo_name.clone(),
+            self.github_token.clone(),
+            self.data_path.clone(),
+        )?;
+        OLProgress::complete("Registered to genesis on github.");
 
-    Ok(())
+        Ok(())
+    }
 
-}
-
-fn _download_snapshot(&mut self, _app_cfg: &AppCfg) -> anyhow::Result<PathBuf> {
+    fn _download_snapshot(&mut self, _app_cfg: &AppCfg) -> anyhow::Result<PathBuf> {
         if let Some(e) = self.epoch {
             if !Confirm::new()
                 .with_prompt(&format!("So are we migrating data from epoch {}?", e))
@@ -324,31 +338,36 @@ fn _download_snapshot(&mut self, _app_cfg: &AppCfg) -> anyhow::Result<PathBuf> {
             println!("We found a /db directory. Can't do genesis with a non-empty db.");
             if Confirm::new()
                 .with_prompt("Let's move the old /db to /db_bak_<date>?")
-                .interact().unwrap()
+                .interact()
+                .unwrap()
             {
                 let date_str = chrono::Utc::now().format("%Y-%m-%d-%H-%M").to_string();
                 fs::rename(
                     self.data_path.join("db"),
                     self.data_path.join(format!("db_bak_{}", date_str)),
-                ).expect("failed to move db to db_bak");
+                )
+                .expect("failed to move db to db_bak");
             }
         }
     }
-
 }
 
-fn initialize_host(home_path: Option<PathBuf>, username: &str, host: HostAndPort) -> anyhow::Result<()> {
+fn initialize_host(
+    home_path: Option<PathBuf>,
+    username: &str,
+    host: HostAndPort,
+) -> anyhow::Result<()> {
     libra_wallet::keys::refresh_validator_files(home_path.clone())?;
     OLProgress::complete("Initialized validator key files");
     // TODO: set validator fullnode configs. Not NONE
-    SetValidatorConfiguration::new(home_path.clone(), username.to_owned(), host, None).set_config_files()?;
+    SetValidatorConfiguration::new(home_path.clone(), username.to_owned(), host, None)
+        .set_config_files()?;
     OLProgress::complete("Saved genesis registration files locally");
 
     node_yaml::save_validator_yaml(home_path)?;
     OLProgress::complete("Saved validator node yaml file locally");
     Ok(())
 }
-
 
 #[test]
 #[ignore]
@@ -358,17 +377,20 @@ fn test_wizard() {
     wizard.start_wizard().unwrap();
 }
 
-#[test] 
+#[test]
 fn test_init() {
-  let h = HostAndPort::local(6180).unwrap();
-  let test_path = dirs::home_dir().unwrap().join(DEFAULT_DATA_PATH).join("test_genesis");
-  initialize_host(Some(test_path),"validator", h).unwrap();
+    let h = HostAndPort::local(6180).unwrap();
+    let test_path = dirs::home_dir()
+        .unwrap()
+        .join(DEFAULT_DATA_PATH)
+        .join("test_genesis");
+    initialize_host(Some(test_path), "validator", h).unwrap();
 }
 
-#[test] 
+#[test]
 fn test_register() {
-  let mut g = GenesisWizard::default();
-  g.username = "0xTEST".to_string();
-  g.git_token_check().unwrap();
-  g.genesis_registration_github().unwrap();
+    let mut g = GenesisWizard::default();
+    g.username = "0xTEST".to_string();
+    g.git_token_check().unwrap();
+    g.genesis_registration_github().unwrap();
 }
