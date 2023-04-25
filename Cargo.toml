@@ -3,6 +3,7 @@ resolver = "2"
 
 members = [
   "libra-wallet",
+  "genesis-tools",
 ]
 
 #     "api",
@@ -257,7 +258,7 @@ zapatos-cli = { package = "aptos", git = "https://github.com/0o-de-lally/zapatos
 # aptos-block-executor = { git = "https://github.com/aptos-labs/aptos-core/aptos-move/block-executor" }
 # aptos-bitvec = { git = "https://github.com/aptos-labs/aptos-core/crates/aptos-bitvec" }
 # aptos-build-info = { git = "https://github.com/aptos-labs/aptos-core/crates/aptos-build-info" }
-# aptos-cached-packages = { git = "https://github.com/aptos-labs/aptos-core/aptos-move/framework/cached-packages"}
+zapatos-cached-packages = { package = "aptos-cached-packages", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor" }
 # libra-cached-packages = { package = "aptos-cached-packages", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
 # aptos-channels = { git = "https://github.com/aptos-labs/aptos-core/crates/channel" }
 # aptos-compression = { git = "https://github.com/aptos-labs/aptos-core/crates/aptos-compression" }
@@ -284,13 +285,13 @@ zapatos-crypto = { package = "aptos-crypto", git = "https://github.com/0o-de-lal
 # aptos-faucet-metrics-server = { git = "https://github.com/aptos-labs/aptos-core/crates/aptos-faucet/metrics-server" }
 # aptos-fallible = { git = "https://github.com/aptos-labs/aptos-core/crates/fallible" }
 # aptos-forge = { git = "https://github.com/aptos-labs/aptos-core/testsuite/forge" }
-# libra-framework = { package = "aptos-framework", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
+zapatos-framework = { package = "aptos-framework", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
 # aptos-fuzzer = { git = "https://github.com/aptos-labs/aptos-core/testsuite/aptos-fuzzer" }
-# libra-gas = { package = "aptos-gas", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
+zapatos-gas = { package = "aptos-gas", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
 # aptos-gas-algebra-ext = { git = "https://github.com/aptos-labs/aptos-core/aptos-move/gas-algebra-ext" }
 # aptos-gas-profiling = { git = "https://github.com/aptos-labs/aptos-core/aptos-move/aptos-gas-profiling" }
 zapatos-genesis = { package = "aptos-genesis", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
-# libra-github-client = { package = "aptos-github-client", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
+zapatos-github-client = { package = "aptos-github-client", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
 # aptos-global-constants = { git = "https://github.com/aptos-labs/aptos-core/config/global-constants" }
 # aptos-id-generator = { git = "https://github.com/aptos-labs/aptos-core/crates/aptos-id-generator" }
 # aptos-indexer = { git = "https://github.com/aptos-labs/aptos-core/crates/indexer" }
@@ -344,7 +345,7 @@ zapatos-keygen = { package = "aptos-keygen", git = "https://github.com/0o-de-lal
 # aptos-safety-rules = { git = "https://github.com/aptos-labs/aptos-core/consensus/safety-rules" }
 # aptos-schemadb = { git = "https://github.com/aptos-labs/aptos-core/storage/schemadb" }
 # aptos-scratchpad = { git = "https://github.com/aptos-labs/aptos-core/storage/scratchpad" }
-# libra-sdk = { package = "aptos-sdk", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
+zapatos-sdk = { package = "aptos-sdk", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
 # aptos-sdk-builder = { git = "https://github.com/aptos-labs/aptos-core/aptos-move/aptos-sdk-builder" }
 # aptos-secure-net = { git = "https://github.com/aptos-labs/aptos-core/secure/net" }
 # libra-secure-storage = { package = "aptos-secure-storage", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
@@ -369,9 +370,9 @@ zapatos-keygen = { package = "aptos-keygen", git = "https://github.com/0o-de-lal
 zapatos-types = { package = "aptos-types", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
 # aptos-validator-interface = { git = "https://github.com/aptos-labs/aptos-core/aptos-move/aptos-validator-interface" }
 # aptos-vault-client = { git = "https://github.com/aptos-labs/aptos-core/secure/storage/vault" }
-# libra-vm = { package = "aptos-vm", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
+zapatos-vm = { package = "aptos-vm", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
 # aptos-vm-logging = { git = "https://github.com/aptos-labs/aptos-core/aptos-move/aptos-vm-logging" }
-# libra-vm-genesis = { package = "aptos-vm-genesis", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
+zapatos-vm-genesis = { package = "aptos-vm-genesis", git = "https://github.com/0o-de-lally/zapatos.git", branch ="vendor"}
 # aptos-vm-validator = { git = "https://github.com/aptos-labs/aptos-core/vm-validator" }
 # aptos-warp-webserver = { git = "https://github.com/aptos-labs/aptos-core/crates/aptos-warp-webserver" }
 # aptos-writeset-generator = { git = "https://github.com/aptos-labs/aptos-core/aptos-move/writeset-transaction-generator" }

@@ -48,11 +48,23 @@ impl Default for SetValidatorConfiguration {
 }
 
 impl SetValidatorConfiguration {
-    pub fn new(username: String, host: HostAndPort) -> Self {
-        let mut cfg = Self::default();
-        cfg.username = username;
-        cfg.validator_host = host;
-        cfg
+    pub fn new(
+      home_dir: Option<PathBuf>, 
+      username: String, 
+      validator_host: HostAndPort,
+      full_node_host: Option<HostAndPort>,
+    ) -> Self {
+        
+        let mut file = home_dir.unwrap_or_else(|| dirs::home_dir().unwrap());
+        file
+            .join(DEFAULT_VALIDATOR_DIR)
+            .join(PUBLIC_KEYS_FILE);
+
+        Self {
+            username,
+            validator_host,
+            full_node_host,
+            owner_public_identity_file: Some(file),           
     }
 
     pub fn set_config_files(self) -> Result<(OperatorConfiguration, OwnerConfiguration)> {
